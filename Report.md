@@ -1,18 +1,18 @@
 # CSCE 435 Group project
 
 ## 1. Group members:
+We will communicate using discord during the duration of the project.
 1. Robbie Clark
 2. Eric Lee
 3. Rushil Aggarwal
-4. Ananth Kumar
-
+4. Ananth Kumar 
 ---
 
 ## 2. Project topic
 Sorting Algorithms
 
 ## 3. Brief project description (what algorithms will you be comparing and on what architectures)
-
+### Algorithms
 1. Bubble Sort (Sequential) / Odd-Even Sort (Parallel)
     - Sequential
     - Parallel using hardware threads (CPU)
@@ -143,8 +143,8 @@ Sorting Algorithms
                 i -= 1
             i = 0
             for i in range(0,len(arr)):
-    		arr[i] = output[i]
-    	magnitude *= 10
+                arr[i] = output[i]
+                magnitude *= 10
         ```
 6. Radix Sort (Parallel)
     ```
