@@ -143,8 +143,8 @@ Sorting Algorithms
                 i -= 1
             i = 0
             for i in range(0,len(arr)):
-                    arr[i] = output[i]
-                magnitude *= 10
+    		arr[i] = output[i]
+    	magnitude *= 10
         ```
 6. Radix Sort (Parallel)
     ```
