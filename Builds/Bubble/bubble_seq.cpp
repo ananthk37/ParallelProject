@@ -70,13 +70,10 @@ int main (int argc, char *argv[]) {
     float* nums = new float [size];
 
     // CALI regions
-    const char* main_prog = "main_prog";
     const char* data_init = "data_init";
     const char* comp = "comp";
     const char* comm = "comm";
     const char* correctness_check = "correctness_check";
-
-    CALI_MARK_BEGIN(main_prog);
 
     // initialize data in array
     CALI_MARK_BEGIN(data_init);
@@ -105,8 +102,6 @@ int main (int argc, char *argv[]) {
     CALI_MARK_BEGIN(correctness_check);
     confirm_sorted(nums, size);
     CALI_MARK_END(correctness_check);
-
-    CALI_MARK_END(main_prog);
 
     // Metadata
     adiak::init(NULL);

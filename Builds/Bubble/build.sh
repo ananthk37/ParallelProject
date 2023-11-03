@@ -1,6 +1,6 @@
 #!/bin/bash
 
-module load GCCcore/8.3.0
+module load intel/2020b
 module load CMake/3.12.1
 
 cmake \
