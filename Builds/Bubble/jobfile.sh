@@ -1,9 +1,9 @@
 #!/bin/bash
 ### Job commands start here
 ## echo '=====================JOB STARTING=========================='
-#SBATCH --job-name=openmpcode              ### Job Name
+#SBATCH --job-name=sequentialbubble              ### Job Name
 #SBATCH --output=output.%j        ### File in which to store job output
-#SBATCH --time=0-00:05:00       ### Wall clock time limit in Days-HH:MM:SS
+#SBATCH --time=0-00:02:00       ### Wall clock time limit in Days-HH:MM:SS
 #SBATCH --nodes=1               ### Node count required for the job, default = 1
 #SBATCH --mem=8G                ### memory per node
 #SBATCH --exclusive             ### no shared resources within a node
@@ -16,12 +16,9 @@ module load intel/2020b
 module load GCCcore/8.3.0
 module load Clang/9.0.1
 # Set variables from input
-arr_size=$1
-input_type=$2
+input_type=$1
+arr_size=$2
 
-CALI_USE_OMPT=1 \
-CALI_CONFIG="spot(output=t${input_type}-m${arr_size}.cali, \
-    time.variance, \
-    openmp.threads, \
-    openmp.times)" \
-./bubble_seq $arr_size $input_type
+CALI_CONFIG="spot(output=${input_type}-${arr_size}.cali, \
+    time.variance)"\
+./bubble_seq $input_type $arr_size
