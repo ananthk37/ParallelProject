@@ -72,6 +72,7 @@ int main (int argc, char *argv[]) {
     // CALI regions
     const char* data_init = "data_init";
     const char* comp = "comp";
+    const char* comp_large = "comp_large";
     const char* comm = "comm";
     const char* correctness_check = "correctness_check";
 
@@ -94,7 +95,9 @@ int main (int argc, char *argv[]) {
 
     // perform sort
     CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
     bubble_sort(nums, size);
+    CALI_MARK_END(comp_large);
     CALI_MARK_END(comp);
     cout << "Bubble Sort Completed" << endl;
 

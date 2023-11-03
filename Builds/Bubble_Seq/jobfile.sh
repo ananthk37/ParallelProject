@@ -14,4 +14,4 @@ time_now=$(date +%s)
 input_type=$1
 arr_size=$2
 
-CALI_CONFIG="spot(output=${input_type}-${arr_size}.cali)" ./bubble_seq $input_type $arr_size
+CALI_CONFIG="spot(output=${input_type}-v${arr_size}.cali)" ./bubble_seq $input_type $arr_size
