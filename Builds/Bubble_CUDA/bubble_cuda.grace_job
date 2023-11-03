@@ -28,6 +28,4 @@ module load intel/2020b
 module load GCCcore/7.3.0
 #
 
-CALI_CONFIG="spot(output=${input_type}-t${num_threads}-v${num_vals}.cali), \
-    cuda.gputime" \
-./bitonic $input_type $num_threads $num_vals
+CALI_CONFIG="spot(output=${input_type}-t${num_threads}-v${num_vals}.cali, cuda.gputime)" ./bubble_cuda $input_type $num_threads $num_vals
