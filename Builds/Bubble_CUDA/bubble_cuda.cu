@@ -123,7 +123,7 @@ void fill_array(float* nums, const char* input_type) {
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(data_gen_d2h);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
-    CALI_MARK_BEGIN(data_gen_d2h);
+    CALI_MARK_END(data_gen_d2h);
     CALI_MARK_END(comm);
 
     cudaFree(dev_nums);
@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
 
     printf("Number of threads: %d\n", THREADS);
     printf("Number of values: %d\n", NUM_VALS);
-    printf("Number of blocks: %d\n", BLOCKS);
+    printf("Number of blocks: %d\n\n", BLOCKS);
 
     // initialize array
     float *nums = (float*) malloc(NUM_VALS * sizeof(float));
@@ -226,13 +226,7 @@ int main(int argc, char *argv[]) {
 
     // sort array
     bubble_sort(nums);
-    cout << "Araay Sorted" << endl;
-
-    // test print array
-    // for(int i = 0; i < NUM_VALS; i++) {
-    //     cout << nums[i] << " ";
-    // }
-    // cout << endl;
+    cout << "Array Sorted" << endl;
 
     // check correctness
     if(confirm_sorted(nums)) {
