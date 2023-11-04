@@ -123,5 +123,5 @@ int main (int argc, char *argv[]) {
     mgr.stop();
     mgr.flush();
 
-    del[] nums;
+    delete[] nums;
 }
