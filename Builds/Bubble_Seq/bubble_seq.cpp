@@ -77,17 +77,17 @@ int main (int argc, char *argv[]) {
 
     // initialize data in array
     CALI_MARK_BEGIN(data_init);
-    if(input_type == "random") {
+    if(strcmp(input_type, "random") == 0) {
         random_fill(nums, size);
     }
-    if(input_type == "sorted") {
+    if(strcmp(input_type, "sorted") == 0) {
         sorted_fill(nums, size);
     }
-    if(input_type == "reverse") {
+    if(strcmp(input_type, "reverse") == 0) {
         reverse_fill(nums, size);
     }
-    if(input_type == "nearly") {
-        cout << "Need to implement" << endl;
+    if(strcmp(input_type, "nearly") == 0) {
+        nearly_fill(nums, size);
     }
     CALI_MARK_END(data_init);
     cout << "Data Initialized" << endl;

@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
 
     // sort array
     bubble_sort(nums);
-    cout << "Array Sorted" << endl;
+    cout << "Odd-Even Sort Completed" << endl;
 
     // check correctness
     if(confirm_sorted(nums)) {
