@@ -10,16 +10,6 @@
 
 using namespace std;
 
-const char* data_init = "data_init";
-const char* comp = "comp";
-const char* comp_large = "comp_large";
-const char* comm = "comm";
-const char* correctness_check = "correctness_check";
-
-#define MASTER 0               /* taskid of first task */
-#define FROM_MASTER 1          /* setting a message type */
-#define FROM_WORKER 2          /* setting a message type */
-
 int	num_procs,             /* number of processes in partition */
 	proc_id,               /* a process identifier */
 	source,                /* task id of message source */
@@ -28,48 +18,36 @@ int	num_procs,             /* number of processes in partition */
 	local_size,            /* entries of array sent to each worker */
 	avg, extra, offset;    /* used to determine rows sent to each worker */
 
-void random_fill(float* nums, int size) {
-    float* local_nums = new float[local_size];
-    
+const char* data_init = "data_init";
+const char* comp = "comp";
+const char* comp_large = "comp_large";
+const char* comm = "comm";
+const char* comm_large = "comm_large";
+const char* data_init_MPI_GATHER = "data_init_MPI_GATHER";
+const char* correctness_check = "correctness_check";
+
+void random_fill(float* local_nums, int size) {
     for(int i = 0; i < local_size; i++) {
         local_nums[i] = rand() % size;
     }
-
-    MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    delete[] local_nums;
 }
 
-void sorted_fill(float* nums) {
-    float* local_nums = new float[local_size];
-
+void sorted_fill(float* local_nums) {
     for(int i = 0; i < local_size; i++) {
         local_nums[i] = offset + i;
     }
-
-    MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    delete[] local_nums;
 }
 
-void reverse_fill(float* nums, int size) {
-    float* local_nums = new float[local_size];
-
+void reverse_fill(float* local_nums, int size) {
     for(int i = 0; i < local_size; i++) {
         local_nums[i] = size - offset - i - 1;
     }
-
-    MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    delete[] local_nums;
 }
 
-void nearly_fill(float* nums, int size) {
-    float* local_nums = new float[local_size];
-
+void nearly_fill(float* local_nums, int size) {
     for(int i = 0; i < local_size; i++) {
-        local_nums[i] = rand() % size / (size - offset - i);
+        local_nums[i] = (rand() % size) / (size - offset - i);
     }
-
-    MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    delete[] local_nums;
 }
 
 void fill_array(float* nums, int size, const char* input_type) {
@@ -79,19 +57,32 @@ void fill_array(float* nums, int size, const char* input_type) {
     local_size = (proc_id < extra) ? (avg + 1) : avg;
     offset = (proc_id < extra) ? (proc_id * avg + proc_id) : (proc_id * avg + extra);
 
+    float* local_nums = new float[local_size];
+
     // fill array
+    CALI_MARK_BEGIN(data_init);
     if(strcmp(input_type, "random") == 0) {
-        random_fill(nums, size);
+        random_fill(local_nums, size);
     }
     if(strcmp(input_type, "sorted") == 0) {
-        sorted_fill(nums);
+        sorted_fill(local_nums);
     }
     if(strcmp(input_type, "reverse") == 0) {
-        reverse_fill(nums, size);
+        reverse_fill(local_nums, size);
     }
     if(strcmp(input_type, "nearly") == 0) {
-        nearly_fill(nums, size);
+        nearly_fill(local_nums, size);
     }
+    CALI_MARK_END(data_init);
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(data_init_MPI_GATHER);
+    MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(data_init_MPI_GATHER);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
+    delete[] local_nums;
 }
 
 int main (int argc, char *argv[]) {

@@ -35,7 +35,9 @@ void reverse_fill(float* nums, int n) {
 }
 
 void nearly_fill(float* nums, int n) {
-
+    for(int i = 0; i < n; i++) {
+        nums[i] = (rand() % n) / (n - i);
+    }
 }
 
 void bubble_sort(float* nums, int n) {

@@ -18,11 +18,12 @@ int BLOCKS;
 int NUM_VALS;
 
 const char* data_init = "data_init";
-const char* data_gen_h2d = "data_gen_h2d";
-const char* data_gen_d2h = "data_gen_d2h";
+const char* data_init_h2d = "data_init_h2d";
+const char* data_init_d2h = "data_init_d2h";
 const char* comp = "comp";
 const char* comp_large = "comp_large";
 const char* comm = "comm";
+const char* comm_large = "comm_large";
 const char* comp_h2d = "comp_h2d";
 const char* comp_d2h = "comp_d2h";
 const char* correctness_check = "correctness_check";
@@ -95,9 +96,11 @@ void fill_array(float* nums, const char* input_type) {
 
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
-    CALI_MARK_BEGIN(data_gen_h2d);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(data_init_h2d);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
-    CALI_MARK_END(data_gen_h2d);
+    CALI_MARK_END(data_init_h2d);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     dim3 blocks(BLOCKS, 1);
@@ -121,9 +124,11 @@ void fill_array(float* nums, const char* input_type) {
 
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
-    CALI_MARK_BEGIN(data_gen_d2h);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(data_init_d2h);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
-    CALI_MARK_END(data_gen_d2h);
+    CALI_MARK_END(data_init_d2h);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     cudaFree(dev_nums);
@@ -137,9 +142,11 @@ void bubble_sort(float* nums) {
 
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(comp_h2d);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
     CALI_MARK_END(comp_h2d);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     dim3 blocks(BLOCKS, 1);
@@ -156,9 +163,11 @@ void bubble_sort(float* nums) {
 
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(comp_d2h);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
     CALI_MARK_END(comp_d2h);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     cudaFree(dev_nums);
@@ -175,10 +184,12 @@ bool confirm_sorted(float* nums) {
 
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(correctness_h2d);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
     cudaMemcpy(dev_sorted, &sorted, sizeof(bool), cudaMemcpyHostToDevice);
     CALI_MARK_END(correctness_h2d);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     dim3 blocks(BLOCKS, 1);
@@ -192,9 +203,11 @@ bool confirm_sorted(float* nums) {
 
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(correctness_d2h);
     cudaMemcpy(&sorted, dev_sorted, sizeof(bool), cudaMemcpyDeviceToHost);
     CALI_MARK_END(correctness_d2h);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     cudaFree(dev_nums);
