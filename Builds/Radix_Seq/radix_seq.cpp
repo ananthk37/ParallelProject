@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include <caliper/cali.h>
+#include <caliper/cali-manager.h>
 #include <adiak.hpp>
 
 
