@@ -1,6 +1,7 @@
 # CSCE 435 Group project
 
 ## 0. Group number: 
+Group #3
 
 ## 1. Group members:
 We will communicate using discord during the duration of the project.

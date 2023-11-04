@@ -117,9 +117,11 @@ int main (int argc, char *argv[]) {
     adiak::value("SizeOfDatatype", sizeof(float)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
     adiak::value("InputSize", size); // The number of elements in input dataset (1000)
     adiak::value("InputType", input_type); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
-    //adiak::value("group_num", group_number); // The number of your group (integer, e.g., 1, 10)
+    adiak::value("group_num", 3); // The number of your group (integer, e.g., 1, 10)
     adiak::value("implementation_source", "Handwritten"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
 
     mgr.stop();
     mgr.flush();
+
+    del[] nums;
 }
