@@ -23,8 +23,8 @@ const char* data_gen_d2h = "data_gen_d2h";
 const char* comp = "comp";
 const char* comp_large = "comp_large";
 const char* comm = "comm";
-const char* cudaMemcpy_host_to_device = "cudaMemcpy_host_to_device";
-const char* cudaMemcpy_device_to_host = "cudaMemcpy_device_to_host";
+const char* comp_h2d = "comp_h2d";
+const char* comp_d2h = "comp_d2h";
 const char* correctness_check = "correctness_check";
 const char* correctness_h2d = "correctness_h2d";
 const char* correctness_d2h = "correctness_d2h";
@@ -56,30 +56,35 @@ __global__ void nearly_fill(float* nums, int size, const char* input_type) {
     nums[index] = (float)curand_uniform(&state) * blockIdx.x;
 }
 
-__global__ void confirm_sorted_step(float* nums, int size, bool* sorted) {
-    // __shared__ bool sorted;
-    // sorted = true;
+__global__ void bubble_sort_step(float* nums, int size, int oddeven) {
     int index = threadIdx.x + blockDim.x * blockIdx.x;
 
+    // even step
+    if(oddeven == 0 && (index * 2 + 1) < size){
+		if(nums[index * 2] > nums[index * 2 + 1]){
+			float temp = nums[index * 2];
+			nums[index * 2] = nums[index * 2 + 1];
+			nums[index * 2 + 1] = temp;
+		}
+	}
+
+    // odd step
+	if(oddeven == 1 && (index * 2 + 2) < size){
+		if(nums[index * 2 + 1] > nums[index * 2 + 2]){
+			float temp = nums[index * 2 + 1];
+			nums[index * 2 + 1] = nums[index * 2 + 2];
+			nums[index * 2 + 2] = temp;
+		}
+	}
+}
+
+__global__ void confirm_sorted_step(float* nums, int size, bool* sorted) {
+    int index = threadIdx.x + blockDim.x * blockIdx.x;
     if(index < size - 1) {
         if(nums[index] > nums[index + 1]) {
             *sorted = false;
         }
     }
-
-    // __syncthreads();
-
-    // // parallel reduction to check if whole array is sorted
-    // for(int i = 1; i < blockDim.x; i *= 2) {
-    //     if(index % (2 * i) == 0) {
-    //         sorted = sorted && __shfl_down_sync(0xFFFFFFFF, sorted, i);
-    //     }
-    //     __syncthreads();
-    // }
-
-    // if(index == 0) {
-    //     *isSorted = sorted;
-    // }
 }
 
 void fill_array(float* nums, const char* input_type) {
@@ -119,6 +124,41 @@ void fill_array(float* nums, const char* input_type) {
     CALI_MARK_BEGIN(data_gen_d2h);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
     CALI_MARK_BEGIN(data_gen_d2h);
+    CALI_MARK_END(comm);
+
+    cudaFree(dev_nums);
+}
+
+void bubble_sort(float* nums) {
+    float *dev_nums;
+    size_t size = NUM_VALS * sizeof(float);
+    
+    cudaMalloc((void**) &dev_nums, size);
+
+    //MEM COPY FROM HOST TO DEVICE
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comp_h2d);
+    cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
+    CALI_MARK_END(comp_h2d);
+    CALI_MARK_END(comm);
+
+    dim3 blocks(BLOCKS, 1);
+    dim3 threads(THREADS, 1);
+
+    // ODD-EVEN BUBBLE SORT
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    for(int i = 0; i < NUM_VALS; i++) {
+        bubble_sort_step<<<blocks, threads>>>(dev_nums, NUM_VALS, i % 2);
+    }
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
+
+    //MEM COPY FROM DEVICE TO HOST
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comp_d2h);
+    cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
+    CALI_MARK_END(comp_d2h);
     CALI_MARK_END(comm);
 
     cudaFree(dev_nums);
@@ -183,6 +223,10 @@ int main(int argc, char *argv[]) {
     // fill array
     fill_array(nums, input_type);
     cout << "Data Initialized" << endl;
+
+    // sort array
+    bubble_sort(nums);
+    cout << "Araay Sorted" << endl;
 
     // test print array
     // for(int i = 0; i < NUM_VALS; i++) {
