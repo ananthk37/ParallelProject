@@ -10,6 +10,12 @@
 
 using namespace std;
 
+const char* data_init = "data_init";
+const char* comp = "comp";
+const char* comp_large = "comp_large";
+const char* comm = "comm";
+const char* correctness_check = "correctness_check";
+
 void random_fill(float* nums, int n) {
     for(int i = 0; i < n; i++) {
         nums[i] = rand() % n;
@@ -50,7 +56,7 @@ void bubble_sort(float* nums, int n) {
 
 bool confirm_sorted(float* nums, int n) {
     for(int i = 0; i < n - 1; i++) {
-        if(nums[i] > nums[i+1]) {
+        if(nums[i] > nums[i + 1]) {
             cout << "Correctness Check Failed..." << endl;
             return false;
         }
@@ -68,13 +74,6 @@ int main (int argc, char *argv[]) {
     const char* input_type = argv[1];
     int size = atoi(argv[2]);
     float* nums = new float [size];
-
-    // CALI regions
-    const char* data_init = "data_init";
-    const char* comp = "comp";
-    const char* comp_large = "comp_large";
-    const char* comm = "comm";
-    const char* correctness_check = "correctness_check";
 
     // initialize data in array
     CALI_MARK_BEGIN(data_init);
