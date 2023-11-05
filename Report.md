@@ -1,6 +1,7 @@
 # CSCE 435 Group project
 
 ## 0. Group number: 
+Group #3
 
 ## 1. Group members:
 We will communicate using discord during the duration of the project.
@@ -46,50 +47,29 @@ Sorting Algorithms
     ```
 2. Odd-Even Sort (Parallel)
     ```c++
-    def OddEvenSort(pthread_t threads[]){
-	int i, j;
- 
-    for (i = 1; i <= n; i++) {
+    def OddEvenSortStep(float* nums, int size, int i) {
+        index = // get either MPI rank or index using CUDA
         // Odd step
-        if (i % 2 == 1) {
-            tmp = 0;
- 
-            // Creating threads
-            for (j = 0; j < max_threads; j++)
-                pthread_create(& threads[j], NULL, compare, NULL);
- 
-            // joining threads i.e. waiting
-            // for all the threads to complete
-            for (j = 0; j < max_threads; j++)
-                pthread_join(threads[j], NULL);
+        if (i == 0 && (index * 2 + 1) < size) {
+            if(nums[index * 2] > nums[index * 2 + 1]) {
+                swap(nums[index * 2], nums[index * 2 + 1]);
+            }
         }
  
         // Even step
-        else {
-            tmp = 1;
- 
-            // Creating threads
-            for (j = 0; j < max_threads - 1; j++)
-                pthread_create(&threads[j], NULL, compare, NULL);
- 
-            // joining threads i.e. waiting
-            // for all the threads to complete
-            for (j = 0; j < max_threads - 1; j++)
-                pthread_join(threads[j], NULL);
+        if (i == 0 && (index * 2 + 2) < size) {
+            if(nums[index * 2 + 1] > nums[index * 2 + 2]) {
+                swap(nums[index * 2 + 1], nums[index * 2 + 2]);
+            }
         }
     }
 
-    void* compare(void* arg)
-    {
-    
-        // Each thread compares
-        // two consecutive elements of the array
-        int index = tmp;
-        tmp = tmp + 2;
-    
-        if ((index + 1 < n) && (a[index] > a[index + 1])) {
-            swap(a[index], a[index + 1]);
+    def OddEvenSort(float* nums, int size) {
+        //memcpy host to device if using cuda
+        for (i = 1; i <= size; i++) {
+            OddEvenSortStep(nums, size, i%2);
         }
+        //memcpy device to host if using cuda
     }
     ```
 3. Merge Sort (Sequential)
