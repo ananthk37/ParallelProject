@@ -22,9 +22,11 @@ const char* data_init = "data_init";
 const char* comp = "comp";
 const char* comp_large = "comp_large";
 const char* comm = "comm";
+const char* comm_small = "comm_small";
 const char* comm_large = "comm_large";
 const char* data_init_MPI_GATHER = "data_init_MPI_GATHER";
 const char* correctness_check = "correctness_check";
+const char* correctness_MPI_GATHER = "correctness_MPI_GATHER";
 
 void random_fill(float* local_nums, int size) {
     for(int i = 0; i < local_size; i++) {
@@ -85,6 +87,27 @@ void fill_array(float* nums, int size, const char* input_type) {
     delete[] local_nums;
 }
 
+void confirm_sorted(float* nums, int size, int* isSorted) {
+    int* sorted = new int;
+    *sorted = 1;
+    for(int i = 0; i < local_size; i++) {
+        int index = i + offset;
+        if(index < size - 1 && nums[index] > nums[index + 1]) {
+            *sorted = 0;
+        }
+    }
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_small);
+    CALI_MARK_BEGIN(correctness_MPI_GATHER);
+    MPI_Gather(sorted, 1, MPI_INT, isSorted, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(correctness_MPI_GATHER);
+    CALI_MARK_END(comm_small);
+    CALI_MARK_END(comm);
+
+    delete sorted;
+}
+
 int main (int argc, char *argv[]) {
     CALI_CXX_MARK_FUNCTION;
     cali::ConfigManager mgr;
@@ -99,9 +122,15 @@ int main (int argc, char *argv[]) {
     const char* input_type = argv[1];
     int size = atoi(argv[2]);
     float* nums = new float[size];
+    int* isSorted = new int;
+    *isSorted = 1;
 
     // fill array
     fill_array(nums, size, input_type);
+    if(proc_id == 0) {
+        cout << "Data Initialized" << endl;
+    }
+    
 
     // test print
     if(proc_id == 0) {
@@ -110,6 +139,17 @@ int main (int argc, char *argv[]) {
             cout << nums[i] << " ";
         }
         cout << endl;
+    }
+
+    // correctness check
+    confirm_sorted(nums, size, isSorted);
+    if(proc_id == 0) {
+        if(*isSorted == 1) {
+            cout << "Correctness Check Passed!" << endl;
+        }
+        else {
+            cout << "Correctness Check Failed..." << endl;
+        }
     }
 
     adiak::init(NULL);
@@ -132,4 +172,5 @@ int main (int argc, char *argv[]) {
 
     MPI_Finalize();
     delete[] nums;
+    delete isSorted;
 }
