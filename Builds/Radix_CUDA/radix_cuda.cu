@@ -160,27 +160,27 @@ bool confirm_sorted(unsigned int* nums) {
 
 
 
-__global__ void radix_sort_step(unsigned int* data, unsigned int* temp_data, unsigned int shift) {
-    unsigned int id = blockId.x * blockDim.x + threadId.x;
-    if(id < NUM_VALS) {
+__global__ void radix_sort_step(unsigned int* data, unsigned int* temp_data, unsigned int shift, unsigned int size) {
+    unsigned int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if(id < size) {
         unsigned int bucket = (data[id] >> shift) * LAST_DIGITS;
         unsigned int count = 0;
 
 
         __shared__ int histogram[NUM_BUCKETS];
-        histogram[threadId.x] = 0;
-        __synchthreads();
+        histogram[threadIdx.x] = 0;
+        __syncthreads();
 
-        for(int i = 0; i < NUM_VALS; i++) {
+        for(int i = 0; i < size; i++) {
             histogram[bucket]++;
         }
-        __synchthreads();
+        __syncthreads();
 
         for(int i = 0; i < bucket; i++) {
             count += histogram[i];
         }
 
-        __synchthreads();
+        __syncthreads();
 
         temp_data[count + id] = data[id];
 
@@ -188,7 +188,7 @@ __global__ void radix_sort_step(unsigned int* data, unsigned int* temp_data, uns
 }
 
 void radix_sort(unsigned int* nums) {
-    unsigned int* dev_nums, dev_temp;
+    unsigned int* dev_nums, *dev_temp;
     size_t size = NUM_VALS * sizeof(unsigned int);
 
     cudaMalloc((void**)&dev_nums, size);
@@ -196,11 +196,13 @@ void radix_sort(unsigned int* nums) {
 
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
 
+    dim3 blocks(BLOCKS, 1);
+    dim3 threads(THREADS, 1);
     for(unsigned int shift = 0; shift < MAX_SHIFT; shift += SHIFT_NUMBER) {
-        radix_sort_step<<<(NUM_VALS + THREADS -)/THREADS, THREADS>>>(dev_nums, dev_temp, shift);
+        radix_sort_step<<<blocks, threads>>>(dev_nums, dev_temp, shift, NUM_VALS);
         cudaMemcpy(nums, dev_temp, size, cudaMemcpyDeviceToHost);
 
-        int* temp = dev_nums;
+        unsigned int* temp = dev_nums;
         dev_nums = dev_temp;
         dev_temp = temp;
     }
