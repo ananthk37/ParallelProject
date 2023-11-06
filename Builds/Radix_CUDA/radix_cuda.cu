@@ -160,48 +160,57 @@ bool confirm_sorted(unsigned int* nums) {
 
 
 
-__global__ void radix_sort_step(unsigned int* data, unsigned int* temp_data, unsigned int shift, unsigned int size) {
+__global__ void histogram_step(unsigned int* data, unsigned int* histogram, unsigned int shift, unsigned int size) {
     unsigned int id = blockIdx.x * blockDim.x + threadIdx.x;
     if(id < size) {
-        unsigned int bucket = (data[id] >> shift) * LAST_DIGITS;
-        unsigned int count = 0;
-
-
-        __shared__ int histogram[NUM_BUCKETS];
-        histogram[threadIdx.x] = 0;
-        __syncthreads();
-
-        for(int i = 0; i < size; i++) {
-            histogram[bucket]++;
+        unsigned int bucket = (data[id] >> shift) & LAST_DIGITS;
+        atomicAdd(&histogram[bucket], 1);
+    }
+}
+__global__ void populate_step(unsigned int* data, unsigned int* temp_data, unsigned int* histogram, unsigned int* histogram_copy, unsigned int size) {
+    unsigned int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if(id < size) {
+        unsigned int bucket = (data[id] >> shift) & LAST_DIGITS;
+        //exclusive scan
+        unsigned int start_offset = 0;
+        for(unsigned int i = 0; i < bucket; i++) {
+            start_offset += histogram[i];
         }
-        __syncthreads();
-
-        for(int i = 0; i < bucket; i++) {
-            count += histogram[i];
-        }
-
-        __syncthreads();
-
-        temp_data[count + id] = data[id];
-
+        //correct offset determined by copy, atomic add
+        bucket_offset = atomicAdd(&histogram_copy[bucket], 1);
+        temp_data[start_offset + bucket_offset] = data[id];
     }
 }
 
 void radix_sort(unsigned int* nums) {
-    unsigned int* dev_nums, *dev_temp;
+    unsigned int* dev_nums, *dev_temp, *histogram, *histogram_copy;
     size_t size = NUM_VALS * sizeof(unsigned int);
+    size_t histogram_size = NUM_BUCKETS * sizeof(unsigned int);
 
+    unsigned int zero_histogram[NUM_BUCKETS];
+    for(unsigned int i = 0; i < NUM_BUCKETS; i++) {
+        zero_histogram[i] = 0;
+    }
+
+    cudaMalloc((void**)&histogram, histogram_size);
+    cudaMalloc((void**)&histogram_copy, histogram_size);
     cudaMalloc((void**)&dev_nums, size);
     cudaMalloc((void**)&dev_temp, size);
 
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
-
+    
     dim3 blocks(BLOCKS, 1);
     dim3 threads(THREADS, 1);
-    for(unsigned int shift = 0; shift < MAX_SHIFT; shift += SHIFT_NUMBER) {
-        radix_sort_step<<<blocks, threads>>>(dev_nums, dev_temp, shift, NUM_VALS);
-        cudaMemcpy(nums, dev_temp, size, cudaMemcpyDeviceToHost);
 
+
+    for(unsigned int shift = 0; shift < MAX_SHIFT; shift += SHIFT_NUMBER) {
+        //first function -- histogram creation
+        cudaMemcpy(histogram, zero_histogram, histogram_size, cudaMemcpyHostToDevice);
+        cudaMemcpy(histogram_copy, zero_histogram, histogram_size, cudaMemcpyHostToDevice);
+        histogram_step<<<blocks, threads>>>(dev_nums, histogram, shift, NUM_VALS);
+        populate_step<<<blocks, threads>>>(dev_nums, dev_temp, histogram, histogram_copy, NUM_VALS);
+        
+        cudaMemcpy(nums, dev_temp, size, cudaMemcpyDeviceToHost);
         unsigned int* temp = dev_nums;
         dev_nums = dev_temp;
         dev_temp = temp;
@@ -209,6 +218,8 @@ void radix_sort(unsigned int* nums) {
 
     cudaFree(dev_nums);
     cudaFree(dev_temp);
+    cudaFree(histogram);
+    cudaFree(histogram_copy);
 
 
 }
