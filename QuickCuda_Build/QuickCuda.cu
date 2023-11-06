@@ -35,7 +35,9 @@ __global__ void random_fill(int* nums, int size, const char* input_type) {
     curandState state;
     curand_init(1, index, 0, &state);
 
-    nums[index] = (int)curand_uniform(&state) * size;
+    float random = curand_uniform(&state); // Generate a random float between 0.0 and 1.0
+    int randomInt = (int)(random * size);  // Scale the float to the range 0 to (size - 1)
+    nums[index] = randomInt;
 }
 
 __global__ void sorted_fill(int* nums, int size, const char* input_type) {
@@ -94,7 +96,7 @@ void fill_array(int* nums, const char* input_type) {
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
     CALI_MARK_END(data_gen_d2h);
     CALI_MARK_END(comm);
-
+    
     cudaFree(dev_nums);
 }
 
@@ -119,7 +121,7 @@ __device__ int partition(int* dev_nums, int low, int high) {
 }
 
 __global__ void quick_sort_step(int* dev_nums, int left, int right) {
-    int stack[32];
+    int stack[64];
     int top = -1;
   
     stack[++top] = left;
@@ -163,7 +165,9 @@ void quick_sort(int* nums) {
     //QUICKSORT
     CALI_MARK_BEGIN(comp);
     CALI_MARK_BEGIN(comp_large);
-    quick_sort_step<<<blocks, threads>>>(dev_nums, 0, NUM_VALS);
+    for(int i = 0; i < NUM_VALS; i++){
+        quick_sort_step<<<blocks, threads>>>(dev_nums, 0, i);
+    }
     CALI_MARK_END(comp_large);
     CALI_MARK_END(comp);
 
@@ -173,8 +177,6 @@ void quick_sort(int* nums) {
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
     CALI_MARK_END(comp_d2h);
     CALI_MARK_END(comm);
-
-    cudaFree(dev_nums);
 }
 
 __global__ void confirm_sorted_step(float* nums, int size, bool* sorted) {
@@ -246,6 +248,12 @@ int main(int argc, char *argv[]) {
     fill_array(nums, input_type);
     cout << "Data Initialized" << endl;
 
+    for (int i = 0; i < NUM_VALS; ++i) {
+        std::cout << nums[i] << " ";  // Output or process each element in 'nums'
+    }
+
+    cudaFree(dev_nums);
+
     // sort array
     quick_sort(nums);
     cout << "Array Sorted" << endl;
@@ -257,13 +265,18 @@ int main(int argc, char *argv[]) {
     else {
         cout << "Correctness Check Failed..." << endl;
     }
+    
+    for (int i = 0; i < NUM_VALS; ++i) {
+        std::cout << nums[i] << " ";  // Output or process each element in 'nums'
+    }
+    cout << endl;
 
     adiak::init(NULL);
     adiak::launchdate();    // launch date of the job
     adiak::libraries();     // Libraries used
     adiak::cmdline();       // Command line used to launch the job
     adiak::clustername();   // Name of the cluster
-    adiak::value("Algorithm", "QuickSort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
+    adiak::value("Algorithm", "Quick(Sample) Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
     adiak::value("ProgrammingModel", "CUDA"); // e.g., "MPI", "CUDA", "MPIwithCUDA"
     adiak::value("Datatype", "int"); // The datatype of input elements (e.g., double, int, float)
     adiak::value("SizeOfDatatype", sizeof(int)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
