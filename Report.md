@@ -16,16 +16,16 @@ Sorting Algorithms
 ### 2a. Brief project description (what algorithms will you be comparing and on what architectures)
 1. Bubble Sort (Sequential) / Odd-Even Sort (Parallel)
     - Sequential
-    - Parallel using hardware threads (MPI)
-    - Parallel using CUDA (GPU)
+    - Parallel using MPI
+    - Parallel using CUDA
 2. Merge Sort
     - Sequential
-    - Parallel using hardware threads (MPI)
-    - Parallel using CUDA (GPU)
+    - Parallel using MPI
+    - Parallel using CUDA
 3. Radix Sort
     - Sequential
-    - Parallel using hardware threads (MPI)
-    - Parallel using CUDA (GPU)
+    - Parallel using MPI
+    - Parallel using CUDA
 
 ### 2b. Pseudocode for each parallel algorithm
 - For MPI programs, include MPI calls you will use to coordinate between processes
@@ -45,7 +45,36 @@ Sorting Algorithms
                     sorted = false
             i -= 1
     ```
-2. Odd-Even Sort (Parallel)
+2. Odd-Even Sort (MPI)
+    ```
+    rank = rank of process
+    num_procs = total number of processes
+    n = local_array.length
+    for i to n:
+        // even step
+        if i % 2 == 0:
+            if rank % 2 == 0 and rank < num_procs - 1:
+                //MPI Send and Recv with rank + 1
+            else:
+                if rank > 0:
+                    //MPI Recv with rank - 1
+                if rank < num_procs - 1:
+                    //MPI Send with rank + 1
+
+        // odd step
+        else:
+            if rank % 2 == 0:
+                if rank > 0:
+                    //MPI Recv with rank - 1
+                if rank < num_procs - 1:
+                    //MPI Send with rank + 1
+            else if rank < num_procs - 1:
+                //MPI Send and Recv with rank + 1
+
+        sort(local_array)
+    ```
+
+3. Odd-Even Sort (CUDA)
     ```c++
     def OddEvenSortStep(float* nums, int size, int i) {
         index = // get either MPI rank or index using CUDA
@@ -72,7 +101,7 @@ Sorting Algorithms
         //memcpy device to host if using cuda
     }
     ```
-3. Merge Sort (Sequential)
+4. Merge Sort (Sequential)
     ```python
     def merge_sort(array):
         total_length = array.length
@@ -102,9 +131,9 @@ Sorting Algorithms
         final_array.append(right[r_index])
         r_index += 1
     ```
-4. Merge Sort (Parallel)
+5. Merge Sort (Parallel)
     - Perform merge sort but allocate each recursive call to a different thread
-5. Radix Sort (Sequential)
+6. Radix Sort (Sequential)
     ```python
     def radix_sort(arr):
         maxNum = max(arr)
@@ -130,7 +159,7 @@ Sorting Algorithms
                 arr[i] = output[i]
                 magnitude *= 10
         ```
-6. Radix Sort (Parallel)
+7. Radix Sort (Parallel)
     ```
     parallel_for part in 0..K-1
     for i in indexes(part):
