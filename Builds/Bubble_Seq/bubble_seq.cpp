@@ -44,7 +44,7 @@ void bubble_sort(float* nums, int n) {
     bool sorted = false;
     for(int i = 0; i < n - 1; i++) {
         sorted = true;
-        for(int j = 1; j < n - i - 1; j++) {
+        for(int j = 0; j < n - i - 1; j++) {
             if(nums[j] > nums[j + 1]) {
                 swap(nums[j], nums[j + 1]);
                 sorted = false;
@@ -93,6 +93,10 @@ int main (int argc, char *argv[]) {
     }
     CALI_MARK_END(data_init);
     cout << "Data Initialized" << endl;
+    // for(int i = 0; i < size; i++) {
+    //     cout << nums[i] << " ";
+    // }
+    // cout << endl;
 
     // perform sort
     CALI_MARK_BEGIN(comp);
@@ -106,6 +110,10 @@ int main (int argc, char *argv[]) {
     CALI_MARK_BEGIN(correctness_check);
     confirm_sorted(nums, size);
     CALI_MARK_END(correctness_check);
+    // for(int i = 0; i < size; i++) {
+    //     cout << nums[i] << " ";
+    // }
+    // cout << endl;
 
     // Metadata
     adiak::init(NULL);

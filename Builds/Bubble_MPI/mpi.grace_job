@@ -23,4 +23,4 @@ array_size=$3
 module load intel/2020b       # load Intel software stack
 module load CMake/3.12.1
 
-CALI_CONFIG="spot(output=MPI-${input_type}p${processes}-v${array_size}.cali)" mpirun -np $processes ./bubble_mpi $input_type $array_size
+CALI_CONFIG="spot(output=MPI-${input_type}-p${processes}-v${array_size}.cali)" mpirun -np $processes ./bubble_mpi $input_type $array_size
