@@ -117,7 +117,11 @@ void merge_low(float* local_nums, float* partner_nums) {
 
 void bubble_sort(float* local_nums) {
     // sort the local data to begin
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
     sort(local_nums, local_nums + local_size);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
     float* partner_nums = new float[local_size];
 
     for(int i = 0; i < num_procs; i++) {
@@ -126,13 +130,15 @@ void bubble_sort(float* local_nums) {
             int partner = (proc_id % 2 == 0) ? (proc_id + 1) : (proc_id - 1);
             if(partner >= 0 && partner < num_procs) {
                 CALI_MARK_BEGIN(comm);
-                CALI_MARK_BEGIN(comm_small);
+                CALI_MARK_BEGIN(comm_large);
                 CALI_MARK_BEGIN(sendrecv);
                 MPI_Sendrecv(local_nums, local_size, MPI_FLOAT, partner, EVENSTEP, partner_nums, local_size, MPI_FLOAT, partner, EVENSTEP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 CALI_MARK_END(sendrecv);
-                CALI_MARK_END(comm_small);
+                CALI_MARK_END(comm_large);
                 CALI_MARK_END(comm);
 
+                CALI_MARK_BEGIN(comp);
+                CALI_MARK_BEGIN(comp_large);
                 // even rank, gets low nums
                 if(proc_id % 2 == 0) {
                     merge_low(local_nums, partner_nums);
@@ -141,6 +147,8 @@ void bubble_sort(float* local_nums) {
                 else {
                     merge_high(local_nums, partner_nums);
                 }
+                CALI_MARK_END(comp_large);
+                CALI_MARK_END(comp);
             }    
         }
 
@@ -149,13 +157,15 @@ void bubble_sort(float* local_nums) {
             int partner = (proc_id % 2 == 0) ? (proc_id - 1) : (proc_id + 1);
             if(partner >= 0 && partner < num_procs) {
                 CALI_MARK_BEGIN(comm);
-                CALI_MARK_BEGIN(comm_small);
+                CALI_MARK_BEGIN(comm_large);
                 CALI_MARK_BEGIN(sendrecv);
                 MPI_Sendrecv(local_nums, local_size, MPI_FLOAT, partner, ODDSTEP, partner_nums, local_size, MPI_FLOAT, partner, ODDSTEP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 CALI_MARK_END(sendrecv);
-                CALI_MARK_END(comm_small);
+                CALI_MARK_END(comm_large);
                 CALI_MARK_END(comm);
                 
+                CALI_MARK_BEGIN(comp);
+                CALI_MARK_BEGIN(comp_large);
                 // even rank, gets high nums
                 if(proc_id % 2 == 0) {
                     merge_high(local_nums, partner_nums);
@@ -164,6 +174,8 @@ void bubble_sort(float* local_nums) {
                 else {
                     merge_low(local_nums, partner_nums);
                 }
+                CALI_MARK_END(comp_large);
+                CALI_MARK_END(comp);      
             }           
         }
     }
@@ -212,11 +224,7 @@ int main (int argc, char *argv[]) {
     }
 
     // perform sort
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
     bubble_sort(local_nums);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
     if(proc_id == 0) {
         cout << "Odd-Even Sort Completed" << endl;
     }

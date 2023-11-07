@@ -40,7 +40,26 @@ void nearly_fill(float* nums, int n) {
     }
 }
 
+void fill_array(float* nums, int n) {
+    CALI_MARK_BEGIN(data_init);
+    if(strcmp(input_type, "random") == 0) {
+        random_fill(nums, size);
+    }
+    if(strcmp(input_type, "sorted") == 0) {
+        sorted_fill(nums, size);
+    }
+    if(strcmp(input_type, "reverse") == 0) {
+        reverse_fill(nums, size);
+    }
+    if(strcmp(input_type, "nearly") == 0) {
+        nearly_fill(nums, size);
+    }
+    CALI_MARK_END(data_init);
+}
+
 void bubble_sort(float* nums, int n) {
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
     bool sorted = false;
     for(int i = 0; i < n - 1; i++) {
         sorted = true;
@@ -54,6 +73,8 @@ void bubble_sort(float* nums, int n) {
             break;
         }
     }
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
 }
 
 bool confirm_sorted(float* nums, int n) {
@@ -78,20 +99,7 @@ int main (int argc, char *argv[]) {
     float* nums = new float [size];
 
     // initialize data in array
-    CALI_MARK_BEGIN(data_init);
-    if(strcmp(input_type, "random") == 0) {
-        random_fill(nums, size);
-    }
-    if(strcmp(input_type, "sorted") == 0) {
-        sorted_fill(nums, size);
-    }
-    if(strcmp(input_type, "reverse") == 0) {
-        reverse_fill(nums, size);
-    }
-    if(strcmp(input_type, "nearly") == 0) {
-        nearly_fill(nums, size);
-    }
-    CALI_MARK_END(data_init);
+    fill_array(nums, size);
     cout << "Data Initialized" << endl;
     // for(int i = 0; i < size; i++) {
     //     cout << nums[i] << " ";
@@ -99,11 +107,7 @@ int main (int argc, char *argv[]) {
     // cout << endl;
 
     // perform sort
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
     bubble_sort(nums, size);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
     cout << "Bubble Sort Completed" << endl;
 
     // check for correctedness
