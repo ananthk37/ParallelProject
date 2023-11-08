@@ -2,8 +2,10 @@
 #include <vector>
 #include <mpi.h>
 
+//master worker implementation of merge sort
+
 int	num_procs,             /* number of processes in partition */
-	proc_id,               /* a process identifier */
+	rank,                  /* a process identifier */
 	source,                /* task id of message source */
 	dest,                  /* task id of message destination */
 	mtype,                 /* message type */
@@ -44,15 +46,7 @@ void nearly_fill(float* local_nums, int size) {
     }
 }
 
-void fill_array(float* nums, int size, const char* input_type) {
-    // calculate helper values for array fill
-    avg = floor(size / num_procs);
-    extra = size % num_procs;
-    local_size = (proc_id < extra) ? (avg + 1) : avg;
-    offset = (proc_id < extra) ? (proc_id * avg + proc_id) : (proc_id * avg + extra);
-
-    float* local_nums = new float[local_size];
-
+void fill_array(float* local_nums, int size, const char* input_type) {
     // fill array
     CALI_MARK_BEGIN(data_init);
     if(strcmp(input_type, "random") == 0) {
@@ -68,36 +62,18 @@ void fill_array(float* nums, int size, const char* input_type) {
         nearly_fill(local_nums, size);
     }
     CALI_MARK_END(data_init);
-
-    CALI_MARK_BEGIN(comm);
-    CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(data_init_MPI_GATHER);
-    MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(data_init_MPI_GATHER);
-    CALI_MARK_END(comm_large);
-    CALI_MARK_END(comm);
-    delete[] local_nums;
 }
 
-void confirm_sorted(float* nums, int size, int* isSorted) {
-    int* sorted = new int;
-    *sorted = 1;
+int confirm_sorted(float* nums, int size) {
+    CALI_MARK_BEGIN(correctness_check);
     for(int i = 0; i < local_size; i++) {
         int index = i + offset;
         if(index < size - 1 && nums[index] > nums[index + 1]) {
-            *sorted = 0;
+            return 0;
         }
     }
-
-    CALI_MARK_BEGIN(comm);
-    CALI_MARK_BEGIN(comm_small);
-    CALI_MARK_BEGIN(correctness_MPI_GATHER);
-    MPI_Gather(sorted, 1, MPI_INT, isSorted, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(correctness_MPI_GATHER);
-    CALI_MARK_END(comm_small);
-    CALI_MARK_END(comm);
-
-    delete sorted;
+    return 1;
+    CALI_MARK_END(correctness_check);
 }
 
 
@@ -176,17 +152,24 @@ int main(int argc, char **argv)
     int size = atoi(argv[2]);
     float* nums = new float[size];
     int* isSorted = new int;
-    *isSorted = 1;
 
     fill_array(nums, size, input_type);
 
+    // create local values
+    avg = floor(size / num_procs);
+    extra = size % num_procs;
+    local_size = (rank < extra) ? (avg + 1) : avg;
+    offset = (rank < extra) ? (rank * avg + rank) : (rank * avg + extra);
+    float* local_nums = new float[local_size];
+
+    // fill array
+    fill_array(local_nums, size, input_type);
+    if(rank == 0) {
+        cout << "Data Initialized" << endl;
+    }
+
     if (rank == 0)
     {
-        // Initialize the data
-        std::vector<int> data = {8, 3, 1, 7, 0, 4, 2, 9};
-        int data_size = data.size();
-        int chunk_size = data_size / size;
-
         // Distribute data to workers
         for (int i = 1; i < size; i++)
         {
@@ -231,9 +214,19 @@ int main(int argc, char **argv)
         MPI_Send(chunk.data(), chunk_size, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
 
-    confirm_sorted(nums, size, isSorted);
+    int sorted = 1;
+    int local_sorted = confirm_sorted(nums, size);
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_small);
+    CALI_MARK_BEGIN(reduce);
+    MPI_Reduce(&local_sorted, &sorted, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(reduce);
+    CALI_MARK_END(comm_small);
+    CALI_MARK_END(comm);
+
     if(rank == 0) {
-        if(*isSorted == 1) {
+        if(sorted == 1) {
             cout << "Correctness Check Passed!" << endl;
         }
         else {
