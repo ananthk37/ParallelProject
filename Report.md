@@ -11,21 +11,25 @@ We will communicate using discord during the duration of the project.
 4. Ananth Kumar 
 
 ## 2. Project topic (e.g., parallel sorting algorithms)
-Sorting Algorithms
+Parallel Sorting Algorithms
 
 ### 2a. Brief project description (what algorithms will you be comparing and on what architectures)
 1. Bubble Sort (Sequential) / Odd-Even Sort (Parallel)
     - Sequential
-    - Parallel using hardware threads (MPI)
-    - Parallel using CUDA (GPU)
+    - Parallel using MPI
+    - Parallel using CUDA
 2. Merge Sort
     - Sequential
-    - Parallel using hardware threads (MPI)
-    - Parallel using CUDA (GPU)
-3. Radix Sort
+    - Parallel using MPI
+    - Parallel using CUDA
+3. Selection Sort
     - Sequential
-    - Parallel using hardware threads (MPI)
-    - Parallel using CUDA (GPU)
+    - Parallel using MPI
+    - Parallel using CUDA
+4. Quick Sort
+    - Sequential
+    - Parallel using MPI
+    - Parallel using CUDA
 
 ### 2b. Pseudocode for each parallel algorithm
 - For MPI programs, include MPI calls you will use to coordinate between processes
@@ -45,7 +49,36 @@ Sorting Algorithms
                     sorted = false
             i -= 1
     ```
-2. Odd-Even Sort (Parallel)
+2. Odd-Even Sort (MPI)
+    ```
+    rank = rank of process
+    num_procs = total number of processes
+    n = local_array.length
+    sort(locarl_array)
+
+    for i to n:
+        // even step
+        if i % 2 == 0:
+            partner = rank-1 if odd rank and rank+1 if even rank
+            if partner >= 0 and partner < num_procs:
+                //MPI_SendRecv local_array with partner rank
+                if rank % 2 == 0:
+                    local_array = //min half of combined data (local & partner array)
+                else:
+                    local_array = //max half of combined data (local & partner array)
+
+        // odd step
+        else:
+            partner = rank+1 if odd rank and rank-1 if even rank
+            if partner >= 0 and partner < num_procs:
+                //MPI_SendRecv local_array with partner rank
+                if rank % 2 == 0:
+                    local_array = //max half of combined data (local & partner array)
+                else:
+                    local_array = //min half of combined data (local & partner array)
+    ```
+
+3. Odd-Even Sort (CUDA)
     ```c++
     def OddEvenSortStep(float* nums, int size, int i) {
         index = // get either MPI rank or index using CUDA
@@ -65,14 +98,15 @@ Sorting Algorithms
     }
 
     def OddEvenSort(float* nums, int size) {
-        //memcpy host to device if using cuda
+        //memcpy host to device
         for (i = 1; i <= size; i++) {
+            // performed in a CUDA Kernel
             OddEvenSortStep(nums, size, i%2);
         }
-        //memcpy device to host if using cuda
+        //memcpy device to host
     }
     ```
-3. Merge Sort (Sequential)
+4. Merge Sort (Sequential)
     ```python
     def merge_sort(array):
         total_length = array.length
@@ -102,61 +136,38 @@ Sorting Algorithms
         final_array.append(right[r_index])
         r_index += 1
     ```
-4. Merge Sort (Parallel)
+5. Merge Sort (CUDA)
     - Perform merge sort but allocate each recursive call to a different thread
-5. Radix Sort (Sequential)
-    ```python
-    def radix_sort(arr):
-        maxNum = max(arr)
-        magnitude = 1
-        while maxNum/magnitude >= 1: #while we are within the number of digits of the max number
-            n = length(arr)
-            count = [0] * 10 #initialize count array of 0s of size 10 each index represents a counter for each digit 0-9
-            output = [0] * n
-            for i from 0 to n:
-                temp = arr[i] #reads value at ith place in array
-                count[temp % 10] += 1 #counts the digit at the current index we are looking att
-            for i from 1 to 10:
-                count[i] += count[i-1]
-            
-            i = n - 1
-            while i >= 0:
-                index = arr[i]
-                output[count[index%10] - 1] = arr[i]
-                count[index%10] -= 1
-                i -= 1
-            i = 0
-            for i in range(0,len(arr)):
-                arr[i] = output[i]
-                magnitude *= 10
-        ```
-6. Radix Sort (Parallel)
+
+6. Merge Sort (MPI)
     ```
-    parallel_for part in 0..K-1
-    for i in indexes(part):
-        bucket = compute_bucket(a[i])
-        cnt[part][bucket]++
-
-    base = 0
-    for bucket in 0..R-1
-        for part in 0..K-1
-            Cnt[part][bucket] += base
-            base = Cnt[part][bucket]
-
-    parallel_for part in 0..K-1
-    for i in indexes(part)
-        bucket = compute_bucket(a[i])
-        out[Cnt[part][bucket]++] = a[i]
+    ```
+7. Selection Sort (Sequential)
+    ```
+    ```
+8. Selection Sort (CUDA)
+    ```
+    ```
+9. Selection Sort (MPI)
+    ```
+    ```
+10. Quick Sort (Sequential)
+    ```
+    ```
+11. Quick Sort (CUDA)
+    ```
+    ```
+12. Quick Sort (MPI)
+    ```
     ```
 
 #### Sources Used
 1. https://www.geeksforgeeks.org/odd-even-transposition-sort-brick-sort-using-pthreads/ (Odd-Even Sort)
 2. https://rachitvasudeva.medium.com/parallel-merge-sort-algorithm-e8175ab60e7 (Merge Sort Parallel)
-3. https://www.geeksforgeeks.org/radix-sort/ (Radix Sequential)
-4. https://cs.stackexchange.com/questions/6871/how-does-the-parallel-radix-sort-work (Radix Parallel)
 
 ### 2c. Evaluation plan - what and how will you measure and compare
-- Input sizes, Input types
+- Input Type: For each algorithm, the data type being sorted will be floats. There will be using 4 different types of data generation which include, sorted, reverse sorted, nearly sorted, and random. 
+- Input sizes: 
 - Strong scaling (same problem size, increase number of processors/nodes)
 - Weak scaling (increase problem size, increase number of processors)
 - Number of threads in a block on the GPU 
@@ -167,6 +178,11 @@ Implement your proposed algorithms, and test them starting on a small scale.
 Instrument your code, and turn in at least one Caliper file per algorithm;
 if you have implemented an MPI and a CUDA version of your algorithm,
 turn in a Caliper file for each.
+
+### Algorithm Descriptions
+1. Bubble Sort (Sequential): Each iteration of a bubble sort starts at the beginning of the array, comparing adjacent indecies until it reaches the end of the array, swapping elements when necessary. The range of indecies that will be compared for any given iteration is 0 to N-iterations-1. The algorithm will stop after N-1 iterations or if no swaps occur during a given iteration, indicating the array is already sorted. The runtime of sequential bubble sort is O(n<sup>2</sup>).
+2. Odd-Even Sort (CUDA): Odd-Even sort is a parallel implementation of bubble sort. When implemented on CUDA, the algorithm starts with copying the starting array from the host to the device. Next, N iterations of the sort are run in the CUDA kernel. For each odd iteration, the odd indecies will be compared with the element to its right. For each even iteration, the even indecies will be compared with the element to its right. After the kernel is done computing, the sorted array will be copied from the device back to the host.
+3. Odd-Even Sort (MPI): Odd-Even sort in MPI starts with each ranking locally sorting its data using a built-in sort of choice. P iterations of the sort are then run. For each odd iteration, odd ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the highest 3 numbers while the odd rank will retain the lowest 3 numbers with both sets remaining in ascending order. For each even iteration, even ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the lowest 3 numbers while the odd rank will retain the highest 3 numbers with both sets remaining in ascending order. Finally, after all iterations are complete, each processes data will be gathered to a single sorted array using MPI_Gather.
 
 ### 3a. Caliper instrumentation
 Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
