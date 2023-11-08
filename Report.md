@@ -11,7 +11,7 @@ We will communicate using discord during the duration of the project.
 4. Ananth Kumar 
 
 ## 2. Project topic (e.g., parallel sorting algorithms)
-Sorting Algorithms
+Parallel Sorting Algorithms
 
 ### 2a. Brief project description (what algorithms will you be comparing and on what architectures)
 1. Bubble Sort (Sequential) / Odd-Even Sort (Parallel)
@@ -22,7 +22,11 @@ Sorting Algorithms
     - Sequential
     - Parallel using MPI
     - Parallel using CUDA
-3. Radix Sort
+3. Selection Sort
+    - Sequential
+    - Parallel using MPI
+    - Parallel using CUDA
+4. Quick Sort
     - Sequential
     - Parallel using MPI
     - Parallel using CUDA
@@ -50,28 +54,28 @@ Sorting Algorithms
     rank = rank of process
     num_procs = total number of processes
     n = local_array.length
+    sort(locarl_array)
+
     for i to n:
         // even step
         if i % 2 == 0:
-            if rank % 2 == 0 and rank < num_procs - 1:
-                //MPI Send and Recv with rank + 1
-            else:
-                if rank > 0:
-                    //MPI Recv with rank - 1
-                if rank < num_procs - 1:
-                    //MPI Send with rank + 1
+            partner = rank-1 if odd rank and rank+1 if even rank
+            if partner >= 0 and partner < num_procs:
+                //MPI_SendRecv local_array with partner rank
+                if rank % 2 == 0:
+                    local_array = //min half of combined data (local & partner array)
+                else:
+                    local_array = //max half of combined data (local & partner array)
 
         // odd step
         else:
-            if rank % 2 == 0:
-                if rank > 0:
-                    //MPI Recv with rank - 1
-                if rank < num_procs - 1:
-                    //MPI Send with rank + 1
-            else if rank < num_procs - 1:
-                //MPI Send and Recv with rank + 1
-
-        sort(local_array)
+            partner = rank+1 if odd rank and rank-1 if even rank
+            if partner >= 0 and partner < num_procs:
+                //MPI_SendRecv local_array with partner rank
+                if rank % 2 == 0:
+                    local_array = //max half of combined data (local & partner array)
+                else:
+                    local_array = //min half of combined data (local & partner array)
     ```
 
 3. Odd-Even Sort (CUDA)
@@ -94,11 +98,12 @@ Sorting Algorithms
     }
 
     def OddEvenSort(float* nums, int size) {
-        //memcpy host to device if using cuda
+        //memcpy host to device
         for (i = 1; i <= size; i++) {
+            // performed in a CUDA Kernel
             OddEvenSortStep(nums, size, i%2);
         }
-        //memcpy device to host if using cuda
+        //memcpy device to host
     }
     ```
 4. Merge Sort (Sequential)
@@ -131,61 +136,66 @@ Sorting Algorithms
         final_array.append(right[r_index])
         r_index += 1
     ```
-5. Merge Sort (Parallel)
-    - Perform merge sort but allocate each recursive call to a different thread
-6. Radix Sort (Sequential)
-    ```python
-    def radix_sort(arr):
-        maxNum = max(arr)
-        magnitude = 1
-        while maxNum/magnitude >= 1: #while we are within the number of digits of the max number
-            n = length(arr)
-            count = [0] * 10 #initialize count array of 0s of size 10 each index represents a counter for each digit 0-9
-            output = [0] * n
-            for i from 0 to n:
-                temp = arr[i] #reads value at ith place in array
-                count[temp % 10] += 1 #counts the digit at the current index we are looking att
-            for i from 1 to 10:
-                count[i] += count[i-1]
-            
-            i = n - 1
-            while i >= 0:
-                index = arr[i]
-                output[count[index%10] - 1] = arr[i]
-                count[index%10] -= 1
-                i -= 1
-            i = 0
-            for i in range(0,len(arr)):
-                arr[i] = output[i]
-                magnitude *= 10
-        ```
-7. Radix Sort (Parallel)
+5. Merge Sort (CUDA)
     ```
-    parallel_for part in 0..K-1
-    for i in indexes(part):
-        bucket = compute_bucket(a[i])
-        cnt[part][bucket]++
+    __device__ void merge()
+        serial merge implementation
+    __global__ void mergeSort(data, size of data 'n')
+        tid = threadindex
+        for i to n stepping by *2 //this is for going from size 1 arrays then merge to 2 then 4 etc.
+            for left = tid * 2 * currsize; left < n-1; left += gridDim * 2 * currSize
+                mid = min(left + currsize-1, n-1)
+                right = min(left + 2 * currsize - 1, n - 1);
+                merge(data, left, mid right)
+    main()
+        numBlocks = size of data/numthreads per block
+        mergeSort<<numBlocks, numThreads>> (inputdata, size of data)
+    ```
 
-    base = 0
-    for bucket in 0..R-1
-        for part in 0..K-1
-            Cnt[part][bucket] += base
-            base = Cnt[part][bucket]
+6. Merge Sort (MPI)
+    ```
+    void merge()
+        serial merge implementation
+    void mergesort()
+        serial mergeSort implementation
+    void main()
+        Do MPI initializiation (init, comm, etc)
 
-    parallel_for part in 0..K-1
-    for i in indexes(part)
-        bucket = compute_bucket(a[i])
-        out[Cnt[part][bucket]++] = a[i]
+        if root:
+            distribute work to workers
+            work on your own chunk of data
+            receive data from other threads and do final merge
+        else:
+            get work from master process
+            do mergeSort on your data
+            send sorted data back to master
+    ```
+7. Selection Sort (Sequential)
+    ```
+    ```
+8. Selection Sort (CUDA)
+    ```
+    ```
+9. Selection Sort (MPI)
+    ```
+    ```
+10. Quick Sort (Sequential)
+    ```
+    ```
+11. Quick Sort (CUDA)
+    ```
+    ```
+12. Quick Sort (MPI)
+    ```
     ```
 
 #### Sources Used
 1. https://www.geeksforgeeks.org/odd-even-transposition-sort-brick-sort-using-pthreads/ (Odd-Even Sort)
 2. https://rachitvasudeva.medium.com/parallel-merge-sort-algorithm-e8175ab60e7 (Merge Sort Parallel)
-3. https://www.geeksforgeeks.org/radix-sort/ (Radix Sequential)
-4. https://cs.stackexchange.com/questions/6871/how-does-the-parallel-radix-sort-work (Radix Parallel)
 
 ### 2c. Evaluation plan - what and how will you measure and compare
-- Input sizes, Input types
+- Input Type: For each algorithm, the data type being sorted will be floats. There will be using 4 different types of data generation which include, sorted, reverse sorted, nearly sorted, and random. 
+- Input sizes: 
 - Strong scaling (same problem size, increase number of processors/nodes)
 - Weak scaling (increase problem size, increase number of processors)
 - Number of threads in a block on the GPU 
@@ -196,6 +206,14 @@ Implement your proposed algorithms, and test them starting on a small scale.
 Instrument your code, and turn in at least one Caliper file per algorithm;
 if you have implemented an MPI and a CUDA version of your algorithm,
 turn in a Caliper file for each.
+
+### Algorithm Descriptions
+1. Bubble Sort (Sequential): Each iteration of a bubble sort starts at the beginning of the array, comparing adjacent indecies until it reaches the end of the array, swapping elements when necessary. The range of indecies that will be compared for any given iteration is 0 to N-iterations-1. The algorithm will stop after N-1 iterations or if no swaps occur during a given iteration, indicating the array is already sorted. The runtime of sequential bubble sort is O(n<sup>2</sup>).
+2. Odd-Even Sort (CUDA): Odd-Even sort is a parallel implementation of bubble sort. When implemented on CUDA, the algorithm starts with copying the starting array from the host to the device. Next, N iterations of the sort are run in the CUDA kernel. For each odd iteration, the odd indecies will be compared with the element to its right. For each even iteration, the even indecies will be compared with the element to its right. After the kernel is done computing, the sorted array will be copied from the device back to the host.
+3. Odd-Even Sort (MPI): Odd-Even sort in MPI starts with each ranking locally sorting its data using a built-in sort of choice. P iterations of the sort are then run. For each odd iteration, odd ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the highest 3 numbers while the odd rank will retain the lowest 3 numbers with both sets remaining in ascending order. For each even iteration, even ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the lowest 3 numbers while the odd rank will retain the highest 3 numbers with both sets remaining in ascending order. Finally, after all iterations are complete, each process's data will be gathered into a single sorted array using MPI_Gather.
+4. Merge Sort (Sequential): Merge sort works by breaking an array into smaller and smaller subarrays until they are only of size one. Once that is complete, the subarrays "merge" with their neighbors and are combined back together, only now we do comparisons to see which should come first. We do this comparison between the two sorted subarrays' elements of the subarray until we complete our merge steps and we are left with a sorted array.
+5. Merge Sort (CUDA): Parallelizing merge sort with CUDA is done in a similar way to the sequential version of the sort, only we are giving each thread its only local block of the initial data as a small subarray. We then on separate threads call a sequential merge and then once the threads all finish the same depth of merge, we start the merge process again on the next level up in parallel. This process is repeated until we reach our full sorted array.
+7. Merge Sort (MPI): Parallelizing merge sort with MPI is done in a similar way to the sequential version of the sort, only we are giving each thread its only local smaller version of the initial data as a small subarray. We have our master process scatter work between the rest of the processes which then all commit to their own serial merge. After this is complete, all of the threads return their sorted arrays and the master process commits to merging those together until we have our final sorted array.
 
 ### 3a. Caliper instrumentation
 Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
