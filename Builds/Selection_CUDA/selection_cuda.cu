@@ -173,7 +173,6 @@ void selection_sort(unsigned int* nums) {
     CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(comp_d2h);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
-    print_list(nums);
     CALI_MARK_END(comp_d2h);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
