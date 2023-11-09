@@ -380,3 +380,59 @@ turn in a Caliper file for each.
 10. Quick Sort (Sequential): QuickSort is the sorting algorithm based on the divide-and-conquer method. Where the array is divided by a selected value in the array called the pivot. All the values left of the pivot is smaller than the pivot and all the values to the right of the pivot are larger than the pivot. Then the sorting algorithm will recursively sort the elements of the two arrays by picking another pivot in the arrays and having two more arrays with the left values being smaller than pivot and so on and so forth until all the elements are sorted. Once the elements are sorted, then the algorithm will merge the smaller arrays into one arrays that is fully sorted. The runtime of quicksort is $O(nlogn)$ time because dividing the array to smaller arrays takes n of time and merging the arrays takes logn time.
 11. Quick Sort (CUDA): Quicksort implemtation in CUDA is done by first copying the array from the host to the device. Then, the array is sorted in the CUDA kernal N times. Then the quicksort algorithm will sort the elements by using a pivot and recursively sort the left and right array, and then will merge the arrays. After the array is sorted by the kernal, the sorted array will be copied from the device back to the host. The runtime for quicksort in CUDA is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
 12. Quick Sort (MPI): The implemtation of quicksort in MPI is by first dividing the array in chunk sizes. All the process get the size of the array from MPI_Bcast which the root process broadcasts to the other processors. Then using MPI_Scatter to scatter the chunk size information to all the procesors. Then the processors will calculate their own chunk size and then sort the chunks with quicksort. Then once the processor does quicksort it sends their chunk to another processor based on a tree-based reduction pattern. Then a processor will recieve a chunk from another processor using MPI_Recv and then the chunk will be merged together. This will continue until all the chunks are merged together. The runtime for quicksort in MPI is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
+
+## 4. Performance evaluation
+Include detailed analysis of computation performance, communication performance. 
+Include figures and explanation of your analysis.
+
+### 4a. Vary the following parameters
+For inputSizes:
+- 2^16, 2^18, 2^20, 2^22, 2^24, 2^26, 2^28
+
+For inputTypes:
+- Sorted, Random, Reverse sorted, 1%perturbed
+
+num_procs, num_threads:
+- MPI: num_procs:
+    - 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024
+- CUDA: num_threads:
+    - 64, 128, 256, 512, 1024, 2048, 4096
+
+This should result in 4x7x10=280 Caliper files for your MPI experiments.
+
+### 4b. Hints for performance analysis
+To automate running a set of experiments, parameterize your program.
+
+- inputType: If you are sorting, "Sorted" could generate a sorted input to pass into your algorithms
+- algorithm: You can have a switch statement that calls the different algorithms and sets the Adiak variables accordingly
+- num_procs:   How many MPI ranks you are using
+- num_threads: Number of CUDA or OpenMP threads
+
+When your program works with these parameters, you can write a shell script 
+that will run a for loop over the parameters above (e.g., on 64 processors, 
+perform runs that invoke algorithm2 for Sorted, ReverseSorted, and Random data).  
+
+### 4c. You should measure the following performance metrics
+- `Time`
+    - Min time/rank
+    - Max time/rank
+    - Avg time/rank
+    - Total time
+    - Variance time/rank
+    - `If GPU`:
+        - Avg GPU time/rank
+        - Min GPU time/rank
+        - Max GPU time/rank
+        - Total GPU time
+
+`Intel top-down`: For your CPU-only experiments on the scale of a single node, you should
+generate additional performance data, measuring the hardware counters on the CPU. This can be done by adding `topdown.all` to the `spot()` options in the `CALI_CONFIG` in your jobfile.
+
+## 5. Presentation
+
+## 6. Final Report
+Submit a zip named `TeamX.zip` where `X` is your team number. The zip should contain the following files:
+- Algorithms: Directory of source code of your algorithms.
+- Data: All `.cali` files used to generate the plots seperated by algorithm/implementation.
+- Jupyter notebook: The Jupyter notebook(s) used to generate the plots for the report.
+- Report.md
