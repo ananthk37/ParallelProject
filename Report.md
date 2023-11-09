@@ -137,10 +137,38 @@ Parallel Sorting Algorithms
         r_index += 1
     ```
 5. Merge Sort (CUDA)
-    - Perform merge sort but allocate each recursive call to a different thread
+    ```
+    __device__ void merge()
+        serial merge implementation
+    __global__ void mergeSort(data, size of data 'n')
+        tid = threadindex
+        for i to n stepping by *2 //this is for going from size 1 arrays then merge to 2 then 4 etc.
+            for left = tid * 2 * currsize; left < n-1; left += gridDim * 2 * currSize
+                mid = min(left + currsize-1, n-1)
+                right = min(left + 2 * currsize - 1, n - 1);
+                merge(data, left, mid right)
+    main()
+        numBlocks = size of data/numthreads per block
+        mergeSort<<numBlocks, numThreads>> (inputdata, size of data)
+    ```
 
 6. Merge Sort (MPI)
     ```
+    void merge()
+        serial merge implementation
+    void mergesort()
+        serial mergeSort implementation
+    void main()
+        Do MPI initializiation (init, comm, etc)
+
+        if root:
+            distribute work to workers
+            work on your own chunk of data
+            receive data from other threads and do final merge
+        else:
+            get work from master process
+            do mergeSort on your data
+            send sorted data back to master
     ```
 7. Selection Sort (Sequential)
     ```python
@@ -343,16 +371,15 @@ turn in a Caliper file for each.
 1. Bubble Sort (Sequential): Each iteration of a bubble sort starts at the beginning of the array, comparing adjacent indecies until it reaches the end of the array, swapping elements when necessary. The range of indecies that will be compared for any given iteration is 0 to N-iterations-1. The algorithm will stop after N-1 iterations or if no swaps occur during a given iteration, indicating the array is already sorted. The runtime of sequential bubble sort is $O(n^2)$.
 2. Odd-Even Sort (CUDA): Odd-Even sort is a parallel implementation of bubble sort. When implemented on CUDA, the algorithm starts with copying the starting array from the host to the device. Next, N iterations of the sort are run in the CUDA kernel. For each odd iteration, the odd indecies will be compared with the element to its right. For each even iteration, the even indecies will be compared with the element to its right. After the kernel is done computing, the sorted array will be copied from the device back to the host. The runtime of CUDA odd-even sort is $O(\frac{n^2}{p})$.
 3. Odd-Even Sort (MPI): Odd-Even sort in MPI starts with each ranking locally sorting its data using a built-in sort of choice. P iterations of the sort are then run. For each odd iteration, odd ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the highest 3 numbers while the odd rank will retain the lowest 3 numbers with both sets remaining in ascending order. For each even iteration, even ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the lowest 3 numbers while the odd rank will retain the highest 3 numbers with both sets remaining in ascending order. Finally, after all iterations are complete, each processes data will be gathered to a single sorted array using MPI_Gather. The runtime of MPI odd-even sort is $O(\frac{n^2}{p})$.
-4. Merge Sort (Sequential):
-5. Merge Sort (CUDA):
-6. Merge Sort (MPI):
+4. Merge Sort (Sequential): Merge sort works by breaking an array into smaller and smaller subarrays until they are only of size one. Once that is complete, the subarrays "merge" with their neighbors and are combined back together, only now we do comparisons to see which should come first. We do this comparison between the two sorted subarrays' elements of the subarray until we complete our merge steps and we are left with a sorted array.
+5. Merge Sort (CUDA): Parallelizing merge sort with CUDA is done in a similar way to the sequential version of the sort, only we are giving each thread its only local block of the initial data as a small subarray. We then on separate threads call a sequential merge and then once the threads all finish the same depth of merge, we start the merge process again on the next level up in parallel. This process is repeated until we reach our full sorted array.
+6. Merge Sort (MPI): Parallelizing merge sort with MPI is done in a similar way to the sequential version of the sort, only we are giving each thread its only local smaller version of the initial data as a small subarray. We have our master process scatter work between the rest of the processes which then all commit to their own serial merge. After this is complete, all of the threads return their sorted arrays and the master process commits to merging those together until we have our final sorted array.
 7. Selection Sort (Sequential): Selection Sort (Sequential):Each iteration starts at a new index from the left going through the array. Each iteration finds the minimum element of the array from that point on, and swaps it into that starting index. This algorithm will always stop after N iterations. The runtime is $O(n^2)$.
 8. Selection Sort (CUDA):Selection Sort (CUDA): Each iteration is the same, starting at a new index from the left going through the array. Each iteration finds the minimum element in parallel, with each cuda thread comparing its element to a shared minimum address. Once the minimum is found, the address of it is found, and then swapped with the starting index. The runtime of the CUDA selection sort is $O(\frac{n^2}{p})$.
 9. Selection Sort (MPI): Selection Sort (MPI): The MPI implementation of selection sort splits the array into P parts, performing a sequential selection sort on each as described above. Then, gathering the array, pairs of the sorted lists are merged into larger sorted lists in parallel akin the the parallel merge sort. The runtime of this MPI selection sort is $O(\frac{n^3}{p^2})$.
 10. Quick Sort (Sequential): QuickSort is the sorting algorithm based on the divide-and-conquer method. Where the array is divided by a selected value in the array called the pivot. All the values left of the pivot is smaller than the pivot and all the values to the right of the pivot are larger than the pivot. Then the sorting algorithm will recursively sort the elements of the two arrays by picking another pivot in the arrays and having two more arrays with the left values being smaller than pivot and so on and so forth until all the elements are sorted. Once the elements are sorted, then the algorithm will merge the smaller arrays into one arrays that is fully sorted. The runtime of quicksort is O(nlogn) time because dividing the array to smaller arrays takes n of time and merging the arrays takes logn time.
 11. Quick Sort (CUDA): Quicksort implemtation in CUDA is done by first copying the array from the host to the device. Then, the array is sorted in the CUDA kernal N times. Then the quicksort algorithm will sort the elements by using a pivot and recursively sort the left and right array, and then will merge the arrays. After the array is sorted by the kernal, the sorted array will be copied from the device back to the host. The runtime for quicksort in CUDA is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
 12. Quick Sort (MPI): The implemtation of quicksort in MPI is by first dividing the array in chunk sizes. All the process get the size of the array from MPI_Bcast which the root process broadcasts to the other processors. Then using MPI_Scatter to scatter the chunk size information to all the procesors. Then the processors will calculate their own chunk size and then sort the chunks with quicksort. Then once the processor does quicksort it sends their chunk to another processor based on a tree-based reduction pattern. Then a processor will recieve a chunk from another processor using MPI_Recv and then the chunk will be merged together. This will continue until all the chunks are merged together. The runtime for quicksort in MPI is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
-
 
 ### 3a. Caliper instrumentation
 Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
