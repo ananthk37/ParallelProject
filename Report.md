@@ -303,9 +303,9 @@ turn in a Caliper file for each.
 7. Selection Sort (Sequential):
 8. Selection Sort (CUDA):
 9. Selection Sort (MPI):
-10. Quick Sort (Sequential):
-11. Quick Sort (CUDA):
-12. Quick Sort (MPI):
+10. Quick Sort (Sequential): QuickSort is the sorting algorithm based on the divide-and-conquer method. Where the array is divided by a selected value in the array called the pivot. All the values left of the pivot is smaller than the pivot and all the values to the right of the pivot are larger than the pivot. Then the sorting algorithm will recursively sort the elements of the two arrays by picking another pivot in the arrays and having two more arrays with the left values being smaller than pivot and so on and so forth until all the elements are sorted. Once the elements are sorted, then the algorithm will merge the smaller arrays into one arrays that is fully sorted. The runtime of quicksort is O(nlogn) time because dividing the array to smaller arrays takes n of time and merging the arrays takes logn time.
+11. Quick Sort (CUDA): Quicksort implemtation in CUDA is done by first copying the array from the host to the device. Then, the array is sorted in the CUDA kernal N times. Then the quicksort algorithm will sort the elements by using a pivot and recursively sort the left and right array, and then will merge the arrays. After the array is sorted by the kernal, the sorted array will be copied from the device back to the host. The runtime for quicksort in CUDA is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
+12. Quick Sort (MPI): The implemtation of quicksort in MPI is by first dividing the array in chunk sizes. All the process get the size of the array from MPI_Bcast which the root process broadcasts to the other processors. Then using MPI_Scatter to scatter the chunk size information to all the procesors. Then the processors will calculate their own chunk size and then sort the chunks with quicksort. Then once the processor does quicksort it sends their chunk to another processor based on a tree-based reduction pattern. Then a processor will recieve a chunk from another processor using MPI_Recv and then the chunk will be merged together. This will continue until all the chunks are merged together. The runtime for quicksort in MPI is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
 
 
 ### 3a. Caliper instrumentation
