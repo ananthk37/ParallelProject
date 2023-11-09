@@ -54,7 +54,7 @@ Parallel Sorting Algorithms
     rank = rank of process
     num_procs = total number of processes
     n = local_array.length
-    sort(locarl_array)
+    sort(local_array)
 
     for i to n:
         // even step
@@ -281,10 +281,10 @@ Parallel Sorting Algorithms
 
 ### 2c. Evaluation plan - what and how will you measure and compare
 - Input Type: For each algorithm, the data type being sorted will be floats. There will be using 4 different types of data generation which include, sorted, reverse sorted, nearly sorted, and random. 
-- Input sizes: 
-- Strong scaling (same problem size, increase number of processors/nodes)
-- Weak scaling (increase problem size, increase number of processors)
-- Number of threads in a block on the GPU 
+- Input sizes: The array will have 2<sup>16</sup>, 2<sup>20</sup>, or 2<sup>24</sup> values.
+- Threads per GPU Block: Each block will have 64, 128, 256, 512, or 1024 threads.
+- MPI Processes: The number of processes will be 2, 4, 8, 16, 32, or 64.
+- Scaling: We will be performing strong scaling for each given problem size. By scaling in this fashion we can also look at weak scaling by comparing performance across different problem sizes.
 
 
 ## 3. Project implementation
@@ -295,8 +295,8 @@ turn in a Caliper file for each.
 
 ### Algorithm Descriptions
 1. Bubble Sort (Sequential): Each iteration of a bubble sort starts at the beginning of the array, comparing adjacent indecies until it reaches the end of the array, swapping elements when necessary. The range of indecies that will be compared for any given iteration is 0 to N-iterations-1. The algorithm will stop after N-1 iterations or if no swaps occur during a given iteration, indicating the array is already sorted. The runtime of sequential bubble sort is O(n<sup>2</sup>).
-2. Odd-Even Sort (CUDA): Odd-Even sort is a parallel implementation of bubble sort. When implemented on CUDA, the algorithm starts with copying the starting array from the host to the device. Next, N iterations of the sort are run in the CUDA kernel. For each odd iteration, the odd indecies will be compared with the element to its right. For each even iteration, the even indecies will be compared with the element to its right. After the kernel is done computing, the sorted array will be copied from the device back to the host.
-3. Odd-Even Sort (MPI): Odd-Even sort in MPI starts with each ranking locally sorting its data using a built-in sort of choice. P iterations of the sort are then run. For each odd iteration, odd ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the highest 3 numbers while the odd rank will retain the lowest 3 numbers with both sets remaining in ascending order. For each even iteration, even ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the lowest 3 numbers while the odd rank will retain the highest 3 numbers with both sets remaining in ascending order. Finally, after all iterations are complete, each processes data will be gathered to a single sorted array using MPI_Gather.
+2. Odd-Even Sort (CUDA): Odd-Even sort is a parallel implementation of bubble sort. When implemented on CUDA, the algorithm starts with copying the starting array from the host to the device. Next, N iterations of the sort are run in the CUDA kernel. For each odd iteration, the odd indecies will be compared with the element to its right. For each even iteration, the even indecies will be compared with the element to its right. After the kernel is done computing, the sorted array will be copied from the device back to the host. The runtime of CUDA odd-even sort is O($\frac {n^2}{p}$).
+3. Odd-Even Sort (MPI): Odd-Even sort in MPI starts with each ranking locally sorting its data using a built-in sort of choice. P iterations of the sort are then run. For each odd iteration, odd ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the highest 3 numbers while the odd rank will retain the lowest 3 numbers with both sets remaining in ascending order. For each even iteration, even ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the lowest 3 numbers while the odd rank will retain the highest 3 numbers with both sets remaining in ascending order. Finally, after all iterations are complete, each processes data will be gathered to a single sorted array using MPI_Gather. The runtime of MPI odd-even sort is O($\frac {n^2}{p}$).
 4. Merge Sort (Sequential):
 5. Merge Sort (CUDA):
 6. Merge Sort (MPI):
