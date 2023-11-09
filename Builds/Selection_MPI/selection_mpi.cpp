@@ -27,6 +27,11 @@ const char* comp = "comp";
 const char* comp_large = "comp_large";
 const char* comm = "comm";
 const char* comm_large = "comm_large";
+const char* comm_bcast = "comm_MPI_BCAST";
+const char* comm_scatter = "comm_MPI_SCATTER";
+const char* comm_gather = "comm_MPI_GATHER";
+const char* comm_send = "comm_MPI_SEND";
+const char* comm_receive = "comm_MPI_RECEIVE";
 const char* data_init_MPI_GATHER = "data_init_MPI_GATHER";
 const char* correctness_check = "correctness_check";
 
@@ -73,13 +78,12 @@ void fill_array(int* local_nums, int size, const char* input_type) {
     CALI_MARK_END(data_init);
 }
 
-void selection_sort(int* arr, int start, int end)
-{
+void selection_sort(int* arr, int start, int end) {
     if (end <= 1)
         return;
  
  
-    for (int i = start + 1; i < start + end; i++) {
+    for (int i = start; i < start + end; i++) {
         int min_num = arr[i];
         int min_index  = i;
         for(int j = i; j < start + end; j++) {
@@ -92,7 +96,7 @@ void selection_sort(int* arr, int start, int end)
         arr[i] = arr[min_index];
         arr[min_index] = temp;
     }
-
+}
 int* merge(int* arr1, int n1, int* arr2, int n2)
 {
     int* result = (int*)malloc((n1 + n2) * sizeof(int));
@@ -139,7 +143,6 @@ int main (int argc, char *argv[]) {
     cali::ConfigManager mgr;
     mgr.start();
     MPI_Status status;
-    double time_taken;
 
     // get MPI info
     MPI_Init(&argc, &argv);
@@ -154,50 +157,78 @@ int main (int argc, char *argv[]) {
     // fill array
     fill_array(nums, size, input_type);
 
-    // test print
-    if(proc_id == 0) {
-        cout << "MASTER RANK" << endl;
-        for(int i = 0; i < size; i++) {
-            cout << nums[i] << " ";
-        }
-        cout << endl;
-    }
 
-    time_taken -= MPI_Wtime();
-
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_small);
+    CALI_MARK_BEGIN(comm_bcast);
     MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(comm_bcast);
+    CALI_MARK_END(comm_small);
+    CALI_MARK_END(comm);
 
+
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_small);
     int chunk_size = (size % num_procs == 0) ? (size / num_procs) : size / (num_procs - 1);
 
     int* chunk = (int*)malloc(chunk_size * sizeof(int));
+    CALI_MARK_END(comp_small);
+    CALI_MARK_END(comp);
 
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(comm_scatter);
     MPI_Scatter(nums, chunk_size, MPI_INT, chunk, chunk_size, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(comm_scatter);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
     free(nums);
     nums = NULL;
 
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
     int own_chunk_size = (size >= chunk_size * (proc_id + 1)) ? chunk_size : (size - chunk_size * proc_id);
  
     selection_sort(chunk, 0, own_chunk_size);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
 
      for (int step = 1; step < num_procs; step = 2 * step) {
         if (proc_id % (2 * step) != 0) {
+            CALI_MARK_BEGIN(comm);
+            CALI_MARK_BEGIN(comm_large);
+            CALI_MARK_BEGIN(comm_send);
             MPI_Send(chunk, own_chunk_size, MPI_INT, proc_id - step, 0, MPI_COMM_WORLD);
+            CALI_MARK_END(comm_send);
+            CALI_MARK_END(comm_large);
+            CALI_MARK_END(comm);
             break;
         }
         if (proc_id + step < num_procs) {
             int received_chunk_size = (size >= chunk_size * (proc_id + 2 * step)) ? (chunk_size * step) : (size - chunk_size * (proc_id + step));
             int* chunk_received;
             chunk_received = (int*)malloc( received_chunk_size * sizeof(int));
+            CALI_MARK_BEGIN(comm);
+            CALI_MARK_BEGIN(comm_large);
+            CALI_MARK_BEGIN(comm_receive);
             MPI_Recv(chunk_received, received_chunk_size, MPI_INT, proc_id + step, 0, MPI_COMM_WORLD, &status);
+            CALI_MARK_END(comm_send);
+            CALI_MARK_END(comm_receive);
+            CALI_MARK_END(comm);
+
+
+            CALI_MARK_START(comp);
+            CALI_MARK_START(comp_large);
             nums = merge(chunk, own_chunk_size, chunk_received, received_chunk_size);
             free(chunk);
             free(chunk_received);
             chunk = nums;
             own_chunk_size = own_chunk_size + received_chunk_size;
+            CALI_MARK_END(comp_large);
+            CALI_MARK_END(comp);
         }
     }
  
-    time_taken += MPI_Wtime();
 
     if(proc_id == 0) {
         cout << "MASTER RANK" << endl;
