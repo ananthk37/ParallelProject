@@ -157,16 +157,22 @@ void selection_sort(unsigned int* nums) {
     dim3 single(1, 1);
 
     // SORT
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
     for(int i = 0; i < NUM_VALS; i++) {
+        CALI_MARK_BEGIN(comm);
+        CALI_MARK_BEGIN(comm_small);
+        CALI_MARK_BEGIN(comm_h2d);
         cudaMemcpy(min_num, &max_int, sizeof(unsigned int), cudaMemcpyHostToDevice);
+        CALI_MARK_END(comm_h2d);
+        CALI_MARK_END(comm_small);
+        CALI_MARK_END(comm);
+        CALI_MARK_BEGIN(comp);
+        CALI_MARK_BEGIN(comp_large);
         find_min_step<<<blocks, threads>>>(dev_nums, min_num, NUM_VALS, i);
         find_index_step<<<blocks, threads>>>(dev_nums, min_num, min_index, NUM_VALS, i);
-	swap_step<<<single, single>>>(dev_nums, min_index, i);
+	    swap_step<<<single, single>>>(dev_nums, min_index, i);
+        CALI_MARK_END(comp_large);
+        CALI_MARK_END(comp);
     }
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
 
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
