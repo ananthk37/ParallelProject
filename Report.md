@@ -143,13 +143,59 @@ Parallel Sorting Algorithms
     ```
     ```
 7. Selection Sort (Sequential)
-    ```
+    ```python
+    def sort(arr):
+        for start_index in arr:
+            min_value = arr[start_index]
+            min_index = start_index
+            for index from start to arr.size:
+                if arr[index] < min_value:
+                    min_index = index
+                    min_value = arr[index]
+            swap arr[start_index] and arr[min_index]
     ```
 8. Selection Sort (CUDA)
-    ```
+    ```python
+    def host_sort(arr):
+        load arr into gpu
+        load min_val into gpu
+        for start_index in arr:
+            set min_val to max_int  
+            min_val = gpu_min(arr from start_index to end)
+            min_index = gpu_index(min_val, arr from start_index to end)
+            gpu_swap(arr[min_index] and arr[start_index])
+    
+    def gpu_min(value): #gpu function on each value
+        min_val = atomic_min(min_val, arr[value])
+    
+    def gpu_index(value): #gpu function on each value
+        if arr[value] == min_val:
+            min_index = value
+    
+    def gpu_swap(val1, val2) #gpu function called once
+        atomic_swap(arr[val1], arr[val2])
+
     ```
 9. Selection Sort (MPI)
-    ```
+    ```python
+    def mpi_sort(array):
+        scatter array to p procs in local_array
+        selection_sort(local_array) for each proc
+        gather local_arrays into array
+        for i from p/2 to 0, dividing by 2:
+            for j from 0 to i, adding by 1:
+                send 2 sorted arrays to proc j
+                merge(arr1, arr2)
+                receive merged array
+                put back into array
+
+    def selection_sort(array):
+        same as sequential selection_sort
+
+    def merge(arr1, arr2):
+        same as sequential merge_sort_step
+        send to master process
+
     ```
 10. Quick Sort (Sequential)
     ```c++
@@ -300,9 +346,9 @@ turn in a Caliper file for each.
 4. Merge Sort (Sequential):
 5. Merge Sort (CUDA):
 6. Merge Sort (MPI):
-7. Selection Sort (Sequential):
-8. Selection Sort (CUDA):
-9. Selection Sort (MPI):
+7. Selection Sort (Sequential): Selection Sort (Sequential):Each iteration starts at a new index from the left going through the array. Each iteration finds the minimum element of the array from that point on, and swaps it into that starting index. This algorithm will always stop after N iterations. The runtime is $O(n^2)$.
+8. Selection Sort (CUDA):Selection Sort (CUDA): Each iteration is the same, starting at a new index from the left going through the array. Each iteration finds the minimum element in parallel, with each cuda thread comparing its element to a shared minimum address. Once the minimum is found, the address of it is found, and then swapped with the starting index. The runtime of the CUDA selection sort is $O(\frac{n^2}{p})$.
+9. Selection Sort (MPI): Selection Sort (MPI): The MPI implementation of selection sort splits the array into P parts, performing a sequential selection sort on each as described above. Then, gathering the array, pairs of the sorted lists are merged into larger sorted lists in parallel akin the the parallel merge sort. The runtime of this MPI selection sort is $O(\frac{n^3}{p^2})$.
 10. Quick Sort (Sequential): QuickSort is the sorting algorithm based on the divide-and-conquer method. Where the array is divided by a selected value in the array called the pivot. All the values left of the pivot is smaller than the pivot and all the values to the right of the pivot are larger than the pivot. Then the sorting algorithm will recursively sort the elements of the two arrays by picking another pivot in the arrays and having two more arrays with the left values being smaller than pivot and so on and so forth until all the elements are sorted. Once the elements are sorted, then the algorithm will merge the smaller arrays into one arrays that is fully sorted. The runtime of quicksort is O(nlogn) time because dividing the array to smaller arrays takes n of time and merging the arrays takes logn time.
 11. Quick Sort (CUDA): Quicksort implemtation in CUDA is done by first copying the array from the host to the device. Then, the array is sorted in the CUDA kernal N times. Then the quicksort algorithm will sort the elements by using a pivot and recursively sort the left and right array, and then will merge the arrays. After the array is sorted by the kernal, the sorted array will be copied from the device back to the host. The runtime for quicksort in CUDA is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
 12. Quick Sort (MPI): The implemtation of quicksort in MPI is by first dividing the array in chunk sizes. All the process get the size of the array from MPI_Bcast which the root process broadcasts to the other processors. Then using MPI_Scatter to scatter the chunk size information to all the procesors. Then the processors will calculate their own chunk size and then sort the chunks with quicksort. Then once the processor does quicksort it sends their chunk to another processor based on a tree-based reduction pattern. Then a processor will recieve a chunk from another processor using MPI_Recv and then the chunk will be merged together. This will continue until all the chunks are merged together. The runtime for quicksort in MPI is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
