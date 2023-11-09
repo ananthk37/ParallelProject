@@ -22,6 +22,8 @@ int	num_procs,             /* number of processes in partition */
 const char* data_init = "data_init";
 const char* comp = "comp";
 const char* comp_large = "comp_large";
+const char* local_sort = "local_sort";
+const char* merge_and_partition = "merge_and_partition";
 const char* comm = "comm";
 const char* comm_small = "comm_small";
 const char* comm_large = "comm_large";
@@ -117,7 +119,13 @@ void merge_low(float* local_nums, float* partner_nums) {
 
 void bubble_sort(float* local_nums) {
     // sort the local data to begin
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    CALI_MARK_BEGIN(local_sort);
     sort(local_nums, local_nums + local_size);
+    CALI_MARK_END(local_sort);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
     float* partner_nums = new float[local_size];
 
     for(int i = 0; i < num_procs; i++) {
@@ -126,13 +134,16 @@ void bubble_sort(float* local_nums) {
             int partner = (proc_id % 2 == 0) ? (proc_id + 1) : (proc_id - 1);
             if(partner >= 0 && partner < num_procs) {
                 CALI_MARK_BEGIN(comm);
-                CALI_MARK_BEGIN(comm_small);
+                CALI_MARK_BEGIN(comm_large);
                 CALI_MARK_BEGIN(sendrecv);
                 MPI_Sendrecv(local_nums, local_size, MPI_FLOAT, partner, EVENSTEP, partner_nums, local_size, MPI_FLOAT, partner, EVENSTEP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 CALI_MARK_END(sendrecv);
-                CALI_MARK_END(comm_small);
+                CALI_MARK_END(comm_large);
                 CALI_MARK_END(comm);
 
+                CALI_MARK_BEGIN(comp);
+                CALI_MARK_BEGIN(comp_large);
+                CALI_MARK_BEGIN(merge_and_partition);
                 // even rank, gets low nums
                 if(proc_id % 2 == 0) {
                     merge_low(local_nums, partner_nums);
@@ -141,6 +152,9 @@ void bubble_sort(float* local_nums) {
                 else {
                     merge_high(local_nums, partner_nums);
                 }
+                CALI_MARK_END(merge_and_partition);
+                CALI_MARK_END(comp_large);
+                CALI_MARK_END(comp);
             }    
         }
 
@@ -149,13 +163,16 @@ void bubble_sort(float* local_nums) {
             int partner = (proc_id % 2 == 0) ? (proc_id - 1) : (proc_id + 1);
             if(partner >= 0 && partner < num_procs) {
                 CALI_MARK_BEGIN(comm);
-                CALI_MARK_BEGIN(comm_small);
+                CALI_MARK_BEGIN(comm_large);
                 CALI_MARK_BEGIN(sendrecv);
                 MPI_Sendrecv(local_nums, local_size, MPI_FLOAT, partner, ODDSTEP, partner_nums, local_size, MPI_FLOAT, partner, ODDSTEP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 CALI_MARK_END(sendrecv);
-                CALI_MARK_END(comm_small);
+                CALI_MARK_END(comm_large);
                 CALI_MARK_END(comm);
                 
+                CALI_MARK_BEGIN(comp);
+                CALI_MARK_BEGIN(comp_large);
+                CALI_MARK_BEGIN(merge_and_partition);
                 // even rank, gets high nums
                 if(proc_id % 2 == 0) {
                     merge_high(local_nums, partner_nums);
@@ -164,6 +181,9 @@ void bubble_sort(float* local_nums) {
                 else {
                     merge_low(local_nums, partner_nums);
                 }
+                CALI_MARK_END(merge_and_partition);
+                CALI_MARK_END(comp_large);
+                CALI_MARK_END(comp);      
             }           
         }
     }
@@ -212,11 +232,7 @@ int main (int argc, char *argv[]) {
     }
 
     // perform sort
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
     bubble_sort(local_nums);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
     if(proc_id == 0) {
         cout << "Odd-Even Sort Completed" << endl;
     }
@@ -282,7 +298,7 @@ int main (int argc, char *argv[]) {
     adiak::value("InputType", input_type); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
     adiak::value("num_procs", num_procs); // The number of processors (MPI ranks)
     adiak::value("group_num", 3); // The number of your group (integer, e.g., 1, 10)
-    adiak::value("implementation_source", "AI"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
+    adiak::value("implementation_source", "Online"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
 
     mgr.stop();
     mgr.flush();

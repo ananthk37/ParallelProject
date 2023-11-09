@@ -40,41 +40,19 @@ void nearly_fill(float* nums, int n) {
     }
 }
 
-void fill_array(float* nums, int n) {
-    CALI_MARK_BEGIN(data_init);
-    if(strcmp(input_type, "random") == 0) {
-        random_fill(nums, size);
-    }
-    if(strcmp(input_type, "sorted") == 0) {
-        sorted_fill(nums, size);
-    }
-    if(strcmp(input_type, "reverse") == 0) {
-        reverse_fill(nums, size);
-    }
-    if(strcmp(input_type, "nearly") == 0) {
-        nearly_fill(nums, size);
-    }
-    CALI_MARK_END(data_init);
-}
-
-void bubble_sort(float* nums, int n) {
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
-    bool sorted = false;
-    for(int i = 0; i < n - 1; i++) {
-        sorted = true;
-        for(int j = 0; j < n - i - 1; j++) {
-            if(nums[j] > nums[j + 1]) {
-                swap(nums[j], nums[j + 1]);
-                sorted = false;
+void selection_sort(float* nums, int n) {
+    for(int i = 0; i < n; i++) {
+        int min_index = i;
+        for(int j = i; j < n; j++) {
+            if(nums[min_index] > nums[j]) {
+                min_index = j;
             }
         }
-        if(sorted) {
-            break;
-        }
+        //swap
+        float temp = nums[i];
+        nums[i] = nums[min_index];
+        nums[min_index] = temp;
     }
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
 }
 
 bool confirm_sorted(float* nums, int n) {
@@ -99,25 +77,34 @@ int main (int argc, char *argv[]) {
     float* nums = new float [size];
 
     // initialize data in array
-    fill_array(nums, size);
+    CALI_MARK_BEGIN(data_init);
+    if(strcmp(input_type, "random") == 0) {
+        random_fill(nums, size);
+    }
+    if(strcmp(input_type, "sorted") == 0) {
+        sorted_fill(nums, size);
+    }
+    if(strcmp(input_type, "reverse") == 0) {
+        reverse_fill(nums, size);
+    }
+    if(strcmp(input_type, "nearly") == 0) {
+        nearly_fill(nums, size);
+    }
+    CALI_MARK_END(data_init);
     cout << "Data Initialized" << endl;
-    // for(int i = 0; i < size; i++) {
-    //     cout << nums[i] << " ";
-    // }
-    // cout << endl;
 
     // perform sort
-    bubble_sort(nums, size);
-    cout << "Bubble Sort Completed" << endl;
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    selection_sort(nums, size);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
+    cout << "selection Sort Completed" << endl;
 
     // check for correctedness
     CALI_MARK_BEGIN(correctness_check);
     confirm_sorted(nums, size);
     CALI_MARK_END(correctness_check);
-    // for(int i = 0; i < size; i++) {
-    //     cout << nums[i] << " ";
-    // }
-    // cout << endl;
 
     // Metadata
     adiak::init(NULL);
@@ -125,7 +112,7 @@ int main (int argc, char *argv[]) {
     adiak::libraries();     // Libraries used
     adiak::cmdline();       // Command line used to launch the job
     adiak::clustername();   // Name of the cluster
-    adiak::value("Algorithm", "Bubble Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
+    adiak::value("Algorithm", "selection Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
     adiak::value("ProgrammingModel", "Sequential"); // e.g., "MPI", "CUDA", "MPIwithCUDA"
     adiak::value("Datatype", "float"); // The datatype of input elements (e.g., double, int, float)
     adiak::value("SizeOfDatatype", sizeof(float)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
