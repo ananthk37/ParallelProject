@@ -152,18 +152,131 @@ Parallel Sorting Algorithms
     ```
     ```
 10. Quick Sort (Sequential)
-    ```
+    ```c++
+    int partition(int* nums, int low, int high){
+    int pivot = nums[high];
+
+    int i = (low - 1);
+    
+    for(int j = low; j < high; j++){
+        if(nums[j] < pivot){
+            i++;
+            swap(nums[i], nums[j]);
+        }
+    }
+
+    swap(nums[i + 1], nums[high]);
+
+    return i + 1;
+    }
+
+    void quick_sort(int* nums, int low, int high) {
+    if(low < high){
+        int pi = partition(nums, low, high);
+
+        quick_sort(nums, low, pi - 1);
+        quick_sort(nums, pi + 1, high);
+    }
+    }
     ```
 11. Quick Sort (CUDA)
-    ```
+    ```c++
+    void quick_sort_step(int* dev_nums, int left, int right){
+        int stack[64];
+        int top = -1;
+    
+        stack[++top] = left;
+        stack[++top] = right;
+    
+        while (top >= 0) {
+            right = stack[top--];
+            left = stack[top--];
+    
+            int pivotIndex = partition(dev_nums, left, right);
+    
+            if (pivotIndex - 1 > left) {
+                stack[++top] = left;
+                stack[++top] = pivotIndex - 1;
+            }
+    
+            if (pivotIndex + 1 < right) {
+                stack[++top] = pivotIndex + 1;
+                stack[++top] = right;
+            }
+        }
+    }
+    void quick_sort(int* nums){
+        for(int i = 0; i < NUM_VALS; i++){
+            //perform cuda kernal call
+            quick_sort_step(dev_nums, 0, i);
+        }
+    }
     ```
 12. Quick Sort (MPI)
-    ```
+    ```c++
+    void quicksort(int* arr, int start, int end){
+        int pivot, index;
+        if (end <= 1)
+            return;
+        pivot = arr[start + end / 2];
+        swap(arr, start, start + end / 2);
+        index = start;
+        for (int i = start + 1; i < start + end; i++) {
+            if (arr[i] < pivot) {
+                index++;
+                swap(arr, i, index);
+            }
+        }
+        swap(arr, start, index);
+        quicksort(arr, start, index - start);
+        quicksort(arr, index + 1, start + end - index - 1);
+    }
+
+    int* merge(int* arr1, int n1, int* arr2, int n2){
+        int* result = (int*)malloc((n1 + n2) * sizeof(int));
+        int i = 0;
+        int j = 0;
+        int k;
+    
+        for (k = 0; k < n1 + n2; k++) {
+            if (i >= n1) {
+                result[k] = arr2[j];
+                j++;
+            }
+            else if (j >= n2) {
+                result[k] = arr1[i];
+                i++;
+            }
+    
+            else if (arr1[i] < arr2[j]) {
+                result[k] = arr1[i];
+                i++;
+            }
+            else {
+                result[k] = arr2[j];
+                j++;
+            }
+        }
+        return result;
+    }
+
+    int chunk_size = (size % num_procs == 0) ? (size / num_procs) : size / (num_procs - 1);
+    int* chunk = (int*)malloc(chunk_size * sizeof(int));
+    // DO MPI_Scatter
+    int own_chunk_size = (size >= chunk_size * (proc_id + 1)) ? chunk_size : (size - chunk_size * proc_id);
+    quicksort(chunk, 0, own_chunk_size);
+    if (rank_of_process % (2 * step) != 0) {
+        //Do MPI_Send
+        }
+    if (rank_of_process + step < number_of_process)
+        // DO MPI_Recv
+        nums = merge(chunk, own_chunk_size, chunk_received, received_chunk_size);
     ```
 
 #### Sources Used
 1. https://selkie-macalester.org/csinparallel/modules/MPIProgramming/build/html/oddEvenSort/oddEven.html (Odd-Even MPI)
 2. https://rachitvasudeva.medium.com/parallel-merge-sort-algorithm-e8175ab60e7 (Merge Sort Parallel)
+3.https://www.geeksforgeeks.org/implementation-of-quick-sort-using-mpi-omp-and-posix-thread/ (Quick Sort MPI)
 
 
 ### 2c. Evaluation plan - what and how will you measure and compare
