@@ -290,7 +290,7 @@ int main (int argc, char *argv[]) {
     adiak::value("InputType", input_type); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
     adiak::value("num_procs", num_procs); // The number of processors (MPI ranks)
     adiak::value("group_num", 3); // The number of your group (integer, e.g., 1, 10)
-    adiak::value("implementation_source", "AI"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
+    adiak::value("implementation_source", "Online"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
 
     mgr.stop();
     mgr.flush();
