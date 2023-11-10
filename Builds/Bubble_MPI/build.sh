@@ -1,4 +1,5 @@
 #!/bin/bash
+
 module purge
 
 module load intel/2020b

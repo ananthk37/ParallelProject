@@ -31,6 +31,7 @@ const char* sendrecv = "MPI_Sendrecv";
 const char* bcast = "MPI_Bcast";
 const char* gather = "MPI_Gather";
 const char* reduce = "MPI_Reduce";
+const char* barrier = "MPI_Barrier";
 const char* correctness_check = "correctness_check";
 
 void random_fill(float* local_nums, int size) {
@@ -192,15 +193,16 @@ void bubble_sort(float* local_nums) {
 }
 
 int confirm_sorted(float* nums, int size) {
-    CALI_MARK_BEGIN(correctness_check);
+     CALI_MARK_BEGIN(correctness_check);
     for(int i = 0; i < local_size; i++) {
         int index = i + offset;
         if(index < size - 1 && nums[index] > nums[index + 1]) {
+            CALI_MARK_END(correctness_check);
             return 0;
         }
     }
-    return 1;
     CALI_MARK_END(correctness_check);
+    return 1;
 }
 
 int main (int argc, char *argv[]) {
