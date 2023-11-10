@@ -1,74 +1,103 @@
-#include <iostream>
-#include <vector>
-#include <mpi.h>
+#include "mpi.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <cmath>
+#include <algorithm>
+#include <limits.h>
 
-//master worker implementation of merge sort
+#include <caliper/cali.h>
+#include <caliper/cali-manager.h>
+#include <adiak.hpp>
 
-int	num_procs,             /* number of processes in partition */
-	rank,                  /* a process identifier */
-	source,                /* task id of message source */
-	dest,                  /* task id of message destination */
-	mtype,                 /* message type */
-	local_size,            /* entries of array sent to each worker */
-	avg, extra, offset;    /* used to determine rows sent to each worker */
+using namespace std;
 
-const char* data_init = "data_init";
-const char* comp = "comp";
-const char* comp_large = "comp_large";
-const char* comm = "comm";
-const char* comm_small = "comm_small";
-const char* comm_large = "comm_large";
-const char* data_init_MPI_GATHER = "data_init_MPI_GATHER";
-const char* correctness_check = "correctness_check";
-const char* correctness_MPI_GATHER = "correctness_MPI_GATHER";
+// master worker implementation of merge sort
 
-void random_fill(float* local_nums, int size) {
-    for(int i = 0; i < local_size; i++) {
+int num_procs,          /* number of processes in partition */
+    rank,               /* a process identifier */
+    source,             /* task id of message source */
+    dest,               /* task id of message destination */
+    mtype,              /* message type */
+    local_size,         /* entries of array sent to each worker */
+    avg, extra, offset; /* used to determine rows sent to each worker */
+
+const char *data_init = "data_init";
+const char *comp = "comp";
+const char *comp_large = "comp_large";
+const char *local_sort = "local_sort";
+const char *merge_and_partition = "merge_and_partition";
+const char *comm = "comm";
+const char *comm_small = "comm_small";
+const char *comm_large = "comm_large";
+const char *sendrecv = "MPI_Sendrecv";
+const char *bcast = "MPI_Bcast";
+const char *gather = "MPI_Gather";
+const char *reduce = "MPI_Reduce";
+const char *correctness_check = "correctness_check";
+
+void random_fill(float *local_nums, int size)
+{
+    for (int i = 0; i < local_size; i++)
+    {
         local_nums[i] = rand() % size;
     }
 }
 
-void sorted_fill(float* local_nums) {
-    for(int i = 0; i < local_size; i++) {
+void sorted_fill(float *local_nums)
+{
+    for (int i = 0; i < local_size; i++)
+    {
         local_nums[i] = offset + i;
     }
 }
 
-void reverse_fill(float* local_nums, int size) {
-    for(int i = 0; i < local_size; i++) {
+void reverse_fill(float *local_nums, int size)
+{
+    for (int i = 0; i < local_size; i++)
+    {
         local_nums[i] = size - offset - i - 1;
     }
 }
 
-void nearly_fill(float* local_nums, int size) {
-    for(int i = 0; i < local_size; i++) {
+void nearly_fill(float *local_nums, int size)
+{
+    for (int i = 0; i < local_size; i++)
+    {
         local_nums[i] = (rand() % size) / (size - offset - i);
     }
 }
 
-void fill_array(float* local_nums, int size, const char* input_type) {
+void fill_array(float *local_nums, int size, const char *input_type)
+{
     // fill array
     CALI_MARK_BEGIN(data_init);
-    if(strcmp(input_type, "random") == 0) {
+    if (strcmp(input_type, "random") == 0)
+    {
         random_fill(local_nums, size);
     }
-    if(strcmp(input_type, "sorted") == 0) {
+    if (strcmp(input_type, "sorted") == 0)
+    {
         sorted_fill(local_nums);
     }
-    if(strcmp(input_type, "reverse") == 0) {
+    if (strcmp(input_type, "reverse") == 0)
+    {
         reverse_fill(local_nums, size);
     }
-    if(strcmp(input_type, "nearly") == 0) {
+    if (strcmp(input_type, "nearly") == 0)
+    {
         nearly_fill(local_nums, size);
     }
     CALI_MARK_END(data_init);
 }
 
-int confirm_sorted(float* nums, int size) {
+int confirm_sorted(float *nums, int size)
+{
     CALI_MARK_BEGIN(correctness_check);
-    for(int i = 0; i < local_size; i++) {
+    for (int i = 0; i < local_size; i++)
+    {
         int index = i + offset;
-        if(index < size - 1 && nums[index] > nums[index + 1]) {
+        if (index < size - 1 && nums[index] > nums[index + 1])
+        {
             return 0;
         }
     }
@@ -76,8 +105,7 @@ int confirm_sorted(float* nums, int size) {
     CALI_MARK_END(correctness_check);
 }
 
-
-void merge(float &arr, int l, int m, int r)
+void merge(float *arr, int l, int m, int r)
 {
     int n1 = m - l + 1;
     int n2 = r - m;
@@ -125,8 +153,11 @@ void merge(float &arr, int l, int m, int r)
     }
 }
 
-void mergeSort(float &arr, int l, int r)
+void mergeSort(float *arr, int l, int r)
 {
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    CALI_MARK_BEGIN(local_sort);
     if (l < r)
     {
         int m = l + (r - l) / 2;
@@ -134,6 +165,9 @@ void mergeSort(float &arr, int l, int r)
         mergeSort(arr, m + 1, r);
         merge(arr, l, m, r);
     }
+    CALI_MARK_END(local_sort);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
 }
 
 int main(int argc, char **argv)
@@ -143,15 +177,14 @@ int main(int argc, char **argv)
     mgr.start();
 
     MPI_Init(&argc, &argv);
-    int rank, size; // Process rank and total num of processes
+    int rank, num_procs; // Process rank and total num of processes
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
     // retrieve user input
-    const char* input_type = argv[1];
+    const char *input_type = argv[1];
     int size = atoi(argv[2]);
-    float* nums = new float[size];
-    int* isSorted = new int;
+    float *nums = new float[size];
 
     fill_array(nums, size, input_type);
 
@@ -160,83 +193,88 @@ int main(int argc, char **argv)
     extra = size % num_procs;
     local_size = (rank < extra) ? (avg + 1) : avg;
     offset = (rank < extra) ? (rank * avg + rank) : (rank * avg + extra);
-    float* local_nums = new float[local_size];
+    float *local_nums = new float[local_size];
 
     // fill array
     fill_array(local_nums, size, input_type);
-    if(rank == 0) {
+    if (rank == 0)
+    {
         cout << "Data Initialized" << endl;
     }
 
+    // start sort
     if (rank == 0)
     {
         // Master's own chunk
-        data = std::vector<int>(data.begin(), data.begin() + chunk_size);
         mergeSort(local_nums, 0, local_size - 1);
 
         // Merge sorted chunks received from workers
-        for (int i = 1; i < size; i++)
+        std::vector<float> data(local_nums, local_nums + local_size);
+        for (int i = 1; i < num_procs; i++)
         {
-            std::vector<int> received_data(chunk_size);
-            MPI_Recv(received_data.data(), chunk_size, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            for (int j = 0; j < chunk_size; j++)
+            std::vector<float> received_data(local_size);
+            CALI_MARK_BEGIN(comm);
+            CALI_MARK_BEGIN(comm_large);
+            MPI_Recv(received_data.data(), local_size, MPI_FLOAT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            CALI_MARK_END(comm_large);
+            CALI_MARK_END(comm);
+            for (int j = 0; j < local_size; j++)
             {
                 data.push_back(received_data[j]);
             }
+            merge(data.data(), 0, local_size * i - 1, local_size * (i + 1) - 1);
         }
-        mergeSort(data, 0, chunk_size * size - 1);
-
-        // Print the sorted data
-        for (int num : data)
+        for (float d : data)
         {
-            std::cout << num << " ";
+            cout << d << " ";
         }
-        std::cout << std::endl;
+        cout << endl;
+        delete[] nums;
+        nums = data.data();
     }
     else
     {
-        mergeSort(chunk, 0, chunk_size - 1);
+        mergeSort(local_nums, 0, local_size - 1);
+        CALI_MARK_BEGIN(comm);
+        CALI_MARK_BEGIN(comm_large);
+        MPI_Send(local_nums, local_size, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+        CALI_MARK_END(comm_large);
+        CALI_MARK_END(comm);
     }
 
     int sorted = 1;
     int local_sorted = confirm_sorted(nums, size);
 
-    CALI_MARK_BEGIN(comm);
-    CALI_MARK_BEGIN(comm_small);
-    CALI_MARK_BEGIN(reduce);
-    MPI_Reduce(&local_sorted, &sorted, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(reduce);
-    CALI_MARK_END(comm_small);
-    CALI_MARK_END(comm);
-
-    if(rank == 0) {
-        if(sorted == 1) {
+    if (rank == 0)
+    {
+        if (local_sorted == 1)
+        {
             cout << "Correctness Check Passed!" << endl;
         }
-        else {
+        else
+        {
             cout << "Correctness Check Failed..." << endl;
         }
     }
 
     adiak::init(NULL);
-    adiak::launchdate();    // launch date of the job
-    adiak::libraries();     // Libraries used
-    adiak::cmdline();       // Command line used to launch the job
-    adiak::clustername();   // Name of the cluster
+    adiak::launchdate();                               // launch date of the job
+    adiak::libraries();                                // Libraries used
+    adiak::cmdline();                                  // Command line used to launch the job
+    adiak::clustername();                              // Name of the cluster
     adiak::value("Algorithm", "Odd-Even Bubble Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
-    adiak::value("ProgrammingModel", "MPI"); // e.g., "MPI", "CUDA", "MPIwithCUDA"
-    adiak::value("Datatype", "float"); // The datatype of input elements (e.g., double, int, float)
-    adiak::value("SizeOfDatatype", sizeof(float)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
-    adiak::value("InputSize", size); // The number of elements in input dataset (1000)
-    adiak::value("InputType", input_type); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
-    adiak::value("num_procs", num_procs); // The number of processors (MPI ranks)
-    adiak::value("group_num", 3); // The number of your group (integer, e.g., 1, 10)
-    adiak::value("implementation_source", "AI"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
+    adiak::value("ProgrammingModel", "MPI");           // e.g., "MPI", "CUDA", "MPIwithCUDA"
+    adiak::value("Datatype", "float");                 // The datatype of input elements (e.g., double, int, float)
+    adiak::value("SizeOfDatatype", sizeof(float));     // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
+    adiak::value("InputSize", size);                   // The number of elements in input dataset (1000)
+    adiak::value("InputType", input_type);             // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
+    adiak::value("num_procs", num_procs);              // The number of processors (MPI ranks)
+    adiak::value("group_num", 3);                      // The number of your group (integer, e.g., 1, 10)
+    adiak::value("implementation_source", "AI");       // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
 
     mgr.stop();
     mgr.flush();
     MPI_Finalize();
     delete[] nums;
-    delete isSorted;
     return 0;
 }

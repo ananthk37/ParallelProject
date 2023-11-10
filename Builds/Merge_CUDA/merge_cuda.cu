@@ -249,15 +249,31 @@ int main(int argc, char *argv[])
     cudaMalloc((void **)&d_temp, sizeof(float) * NUM_VALS);
 
     // Copy data from the host to the device
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(comp_h2d);
     cudaMemcpy(d_data, h_data, sizeof(float) * NUM_VALS, cudaMemcpyHostToDevice);
+    CALI_MARK_END(comp_h2d);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
 
     // Launch the CUDA kernel to perform merge sort
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
     mergeSort<<<1, 1>>>(d_data, d_temp, NUM_VALS);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
     cudaDeviceSynchronize();
 
     // Copy the sorted data back to the host
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(comp_d2h);
     cudaMemcpy(h_data, d_data, sizeof(float) * NUM_VALS, cudaMemcpyDeviceToHost);
-
+    CALI_MARK_END(comp_d2h);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
+    
     // Clean up and free memory
     cudaFree(d_data);
     cudaFree(d_temp);
