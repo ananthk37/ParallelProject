@@ -77,13 +77,13 @@ int confirm_sorted(float* nums, int size) {
 }
 
 
-void merge(std::vector<int> &arr, int l, int m, int r)
+void merge(float &arr, int l, int m, int r)
 {
     int n1 = m - l + 1;
     int n2 = r - m;
 
-    std::vector<int> L(n1);
-    std::vector<int> R(n2);
+    std::vector<float> L(n1);
+    std::vector<float> R(n2);
 
     for (int i = 0; i < n1; i++)
     {
@@ -125,7 +125,7 @@ void merge(std::vector<int> &arr, int l, int m, int r)
     }
 }
 
-void mergeSort(std::vector<int> &arr, int l, int r)
+void mergeSort(float &arr, int l, int r)
 {
     if (l < r)
     {
@@ -170,17 +170,9 @@ int main(int argc, char **argv)
 
     if (rank == 0)
     {
-        // Distribute data to workers
-        for (int i = 1; i < size; i++)
-        {
-            std::vector<int> chunk(data.begin() + i * chunk_size, data.begin() + (i + 1) * chunk_size);
-            MPI_Send(&chunk_size, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-            MPI_Send(chunk.data(), chunk_size, MPI_INT, i, 0, MPI_COMM_WORLD);
-        }
-
         // Master's own chunk
         data = std::vector<int>(data.begin(), data.begin() + chunk_size);
-        mergeSort(data, 0, chunk_size - 1);
+        mergeSort(local_nums, 0, local_size - 1);
 
         // Merge sorted chunks received from workers
         for (int i = 1; i < size; i++)
@@ -203,15 +195,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        // Worker processes
-        int chunk_size;
-        MPI_Recv(&chunk_size, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-        std::vector<int> chunk(chunk_size);
-        MPI_Recv(chunk.data(), chunk_size, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         mergeSort(chunk, 0, chunk_size - 1);
-
-        MPI_Send(chunk.data(), chunk_size, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
 
     int sorted = 1;
