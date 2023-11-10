@@ -30,7 +30,6 @@ const char* reduce = "MPI_Reduce";
 const char* scatter = "MPI_Scatter";
 const char* recv = "MPI_Recv";
 const char* send = "MPI_Send";
-const char* scatter = "MPI_Scatter";
 const char* correctness_check = "correctness_check";
 
 void random_fill(int* local_nums, int size) {
@@ -154,7 +153,7 @@ void fill_array(int* nums, int size, const char* input_type) {
     free(local_nums);
 }
 
-int confirm_sorted(float* nums, int size) {
+int confirm_sorted(int* nums, int size) {
     CALI_MARK_BEGIN(correctness_check);
     for(int i = 0; i < local_size; i++) {
         int index = i + offset;
@@ -213,9 +212,9 @@ int main (int argc, char *argv[]) {
     CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(scatter);
     MPI_Scatter(nums, chunk_size, MPI_INT, chunk, chunk_size, MPI_INT, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(comm);
-    CALI_MARK_END(comm_large);
     CALI_MARK_END(scatter);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
 
     free(nums);
     nums = NULL;
@@ -226,7 +225,7 @@ int main (int argc, char *argv[]) {
     CALI_MARK_BEGIN(comm_large);
     quicksort(chunk, 0, own_chunk_size);
     CALI_MARK_END(comm_large);
-    CALI_MARK_END(scatter);
+    CALI_MARK_END(comm);
 
      for (int step = 1; step < num_procs; step = 2 * step) {
         if (proc_id % (2 * step) != 0) {
@@ -234,9 +233,9 @@ int main (int argc, char *argv[]) {
             CALI_MARK_BEGIN(comm_small);
             CALI_MARK_BEGIN(send);
             MPI_Send(chunk, own_chunk_size, MPI_INT, proc_id - step, 0, MPI_COMM_WORLD);
-            CALI_MARK_END(comm);
-            CALI_MARK_END(comm_small);
             CALI_MARK_END(send);
+            CALI_MARK_END(comm_small);
+            CALI_MARK_END(comm);
             break;
         }
         if (proc_id + step < num_procs) {
@@ -248,15 +247,15 @@ int main (int argc, char *argv[]) {
             CALI_MARK_BEGIN(comm_small);
             CALI_MARK_BEGIN(recv);
             MPI_Recv(chunk_received, received_chunk_size, MPI_INT, proc_id + step, 0, MPI_COMM_WORLD, &status);
-            CALI_MARK_END(comm);
-            CALI_MARK_END(comm_small);
             CALI_MARK_END(recv);
+            CALI_MARK_END(comm_small);
+            CALI_MARK_END(comm);
 
             CALI_MARK_BEGIN(comm);
             CALI_MARK_BEGIN(comm_large);
             nums = merge(chunk, own_chunk_size, chunk_received, received_chunk_size);
-            CALI_MARK_END(comm);
             CALI_MARK_END(comm_large);
+            CALI_MARK_END(comm);
 
             free(chunk);
             free(chunk_received);
