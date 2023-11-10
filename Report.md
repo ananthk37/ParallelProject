@@ -357,7 +357,7 @@ Parallel Sorting Algorithms
 - Input Type: For each algorithm, the data type being sorted will be floats. There will be using 4 different types of data generation which include, sorted, reverse sorted, nearly sorted, and random. 
 - Input sizes: The array will have 2<sup>16</sup>, 2<sup>20</sup>, or 2<sup>24</sup> values.
 - Threads per GPU Block: Each block will have 64, 128, 256, 512, or 1024 threads.
-- MPI Processes: The number of processes will be 2, 4, 8, 16, 32, or 64.
+- MPI Processes: The number of processes will be 2, 4, 8, 16, 32, 64, or 128.
 - Scaling: We will be performing strong scaling for each given problem size. By scaling in this fashion we can also look at weak scaling by comparing performance across different problem sizes.
 
 
