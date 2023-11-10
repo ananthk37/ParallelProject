@@ -29,7 +29,8 @@ const char* comp_d2h = "comp_d2h";
 const char* correctness_check = "correctness_check";
 const char* correctness_h2d = "correctness_h2d";
 const char* correctness_d2h = "correctness_d2h";
-
+const char* comm_small = "comm_small";
+const char* comm_h2d = "comm_h2d";
 
 __global__ void random_fill(unsigned int* nums, int size, const char* input_type) {
     int index = threadIdx.x + blockDim.x * blockIdx.x;
