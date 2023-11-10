@@ -40,7 +40,7 @@ void nearly_fill(float* nums, int n) {
     }
 }
 
-void fill_array(float* nums, int n) {
+void fill_array(float* nums, int size, const char* input_type) {
     CALI_MARK_BEGIN(data_init);
     if(strcmp(input_type, "random") == 0) {
         random_fill(nums, size);
@@ -107,7 +107,7 @@ int main (int argc, char *argv[]) {
     // cout << endl;
 
     // perform sort
-    bubble_sort(nums, size);
+    bubble_sort(nums, size, input_type);
     cout << "Bubble Sort Completed" << endl;
 
     // check for correctedness
