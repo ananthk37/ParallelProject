@@ -2,15 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cmath>
-#include <algorithm> 
 #include <limits.h>
 
 #include <caliper/cali.h>
 #include <caliper/cali-manager.h>
 #include <adiak.hpp>
-
-#define ODDSTEP 0
-#define EVENSTEP 1
 
 using namespace std;
 
@@ -28,13 +24,14 @@ const char* comp_large = "comp_large";
 const char* comm = "comm";
 const char* comm_large = "comm_large";
 const char* comm_small = "comm_small";
-const char* comm_bcast = "comm_MPI_BCAST";
-const char* comm_scatter = "comm_MPI_SCATTER";
-const char* comm_gather = "comm_MPI_GATHER";
-const char* comm_send = "comm_MPI_SEND";
-const char* comm_receive = "comm_MPI_RECEIVE";
 const char* data_init_MPI_GATHER = "data_init_MPI_GATHER";
+const char* bcast = "MPI_Bcast";
+const char* reduce = "MPI_Reduce";
+const char* scatter = "MPI_Scatter";
+const char* recv = "MPI_Recv";
+const char* send = "MPI_Send";
 const char* correctness_check = "correctness_check";
+
 void random_fill(int* local_nums, int size) {
     for(int i = 0; i < local_size; i++) {
         local_nums[i] = rand() % size;
@@ -59,23 +56,11 @@ void nearly_fill(int* local_nums, int size) {
     }
 }
 
-
-void fill_array(int* local_nums, int size, const char* input_type) {
-    // fill array
-    CALI_MARK_BEGIN(data_init);
-    if(strcmp(input_type, "random") == 0) {
-        random_fill(local_nums, size);
-    }
-    if(strcmp(input_type, "sorted") == 0) {
-        sorted_fill(local_nums);
-    }
-    if(strcmp(input_type, "reverse") == 0) {
-        reverse_fill(local_nums, size);
-    }
-    if(strcmp(input_type, "nearly") == 0) {
-        nearly_fill(local_nums, size);
-    }
-    CALI_MARK_END(data_init);
+void swap(int* arr, int i, int j)
+{
+    int t = arr[i];
+    arr[i] = arr[j];
+    arr[j] = t;
 }
 
 void selection_sort(int* arr, int start, int end) {
@@ -97,6 +82,7 @@ void selection_sort(int* arr, int start, int end) {
         arr[min_index] = temp;
     }
 }
+
 int* merge(int* arr1, int n1, int* arr2, int n2)
 {
     int* result = (int*)malloc((n1 + n2) * sizeof(int));
@@ -126,23 +112,58 @@ int* merge(int* arr1, int n1, int* arr2, int n2)
     return result;
 }
 
+void fill_array(int* nums, int size, const char* input_type) {
+    // calculate helper values for array fill
+    avg = floor(size / num_procs);
+    extra = size % num_procs;
+    local_size = (proc_id < extra) ? (avg + 1) : avg;
+    offset = (proc_id < extra) ? (proc_id * avg + proc_id) : (proc_id * avg + extra);
 
-int confirm_sorted(float* nums, int size) {
+    int* local_nums = (int*)malloc(local_size * sizeof(int));
+
+    // fill array
+    CALI_MARK_BEGIN(data_init);
+    if(strcmp(input_type, "random") == 0) {
+        random_fill(local_nums, size);
+    }
+    if(strcmp(input_type, "sorted") == 0) {
+        sorted_fill(local_nums);
+    }
+    if(strcmp(input_type, "reverse") == 0) {
+        reverse_fill(local_nums, size);
+    }
+    if(strcmp(input_type, "nearly") == 0) {
+        nearly_fill(local_nums, size);
+    }
+    CALI_MARK_END(data_init);
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(data_init_MPI_GATHER);
+    MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(data_init_MPI_GATHER);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
+    free(local_nums);
+}
+
+int confirm_sorted(int* nums, int size) {
     CALI_MARK_BEGIN(correctness_check);
-    for(int i = 0; i < local_size; i++) {
-        int index = i + offset;
-        if(index < size - 1 && nums[index] > nums[index + 1]) {
+    for(int i = 0; i < size - 1; i++) {
+        if(nums[i] > nums[i + 1]) {
             return 0;
         }
     }
     return 1;
     CALI_MARK_END(correctness_check);
 }
+
 int main (int argc, char *argv[]) {
     CALI_CXX_MARK_FUNCTION;
     cali::ConfigManager mgr;
     mgr.start();
     MPI_Status status;
+    double time_taken;
 
     // get MPI info
     MPI_Init(&argc, &argv);
@@ -157,50 +178,52 @@ int main (int argc, char *argv[]) {
     // fill array
     fill_array(nums, size, input_type);
 
+    // test print
+    if(proc_id == 0) {
+        cout << "MASTER RANK" << endl;
+    }
 
-    CALI_MARK_BEGIN(comm);
-    CALI_MARK_BEGIN(comm_small);
-    CALI_MARK_BEGIN(comm_bcast);
-    MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(comm_bcast);
-    CALI_MARK_END(comm_small);
-    CALI_MARK_END(comm);
-
-
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_small);
-    int chunk_size = (size % num_procs == 0) ? (size / num_procs) : size / (num_procs - 1);
-
-    int* chunk = (int*)malloc(chunk_size * sizeof(int));
-    CALI_MARK_END(comp_small);
-    CALI_MARK_END(comp);
+    time_taken -= MPI_Wtime();
 
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(comm_scatter);
-    MPI_Scatter(nums, chunk_size, MPI_INT, chunk, chunk_size, MPI_INT, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(comm_scatter);
+    CALI_MARK_BEGIN(bcast);
+    MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(bcast);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
+
+    int chunk_size = (size % num_procs == 0) ? (size / num_procs) : size / (num_procs - 1);
+
+    int* chunk = (int*)malloc(chunk_size * sizeof(int));
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(scatter);
+    MPI_Scatter(nums, chunk_size, MPI_INT, chunk, chunk_size, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(scatter);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
+
     free(nums);
     nums = NULL;
 
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
     int own_chunk_size = (size >= chunk_size * (proc_id + 1)) ? chunk_size : (size - chunk_size * proc_id);
  
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     selection_sort(chunk, 0, own_chunk_size);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
 
      for (int step = 1; step < num_procs; step = 2 * step) {
         if (proc_id % (2 * step) != 0) {
             CALI_MARK_BEGIN(comm);
-            CALI_MARK_BEGIN(comm_large);
-            CALI_MARK_BEGIN(comm_send);
+            CALI_MARK_BEGIN(comm_small);
+            CALI_MARK_BEGIN(send);
             MPI_Send(chunk, own_chunk_size, MPI_INT, proc_id - step, 0, MPI_COMM_WORLD);
-            CALI_MARK_END(comm_send);
-            CALI_MARK_END(comm_large);
+            CALI_MARK_END(send);
+            CALI_MARK_END(comm_small);
             CALI_MARK_END(comm);
             break;
         }
@@ -208,34 +231,41 @@ int main (int argc, char *argv[]) {
             int received_chunk_size = (size >= chunk_size * (proc_id + 2 * step)) ? (chunk_size * step) : (size - chunk_size * (proc_id + step));
             int* chunk_received;
             chunk_received = (int*)malloc( received_chunk_size * sizeof(int));
+
+            CALI_MARK_BEGIN(comm);
+            CALI_MARK_BEGIN(comm_small);
+            CALI_MARK_BEGIN(recv);
+            MPI_Recv(chunk_received, received_chunk_size, MPI_INT, proc_id + step, 0, MPI_COMM_WORLD, &status);
+            CALI_MARK_END(recv);
+            CALI_MARK_END(comm_small);
+            CALI_MARK_END(comm);
+
             CALI_MARK_BEGIN(comm);
             CALI_MARK_BEGIN(comm_large);
-            CALI_MARK_BEGIN(comm_receive);
-            MPI_Recv(chunk_received, received_chunk_size, MPI_INT, proc_id + step, 0, MPI_COMM_WORLD, &status);
-            CALI_MARK_END(comm_receive);
+            nums = merge(chunk, own_chunk_size, chunk_received, received_chunk_size);
             CALI_MARK_END(comm_large);
             CALI_MARK_END(comm);
 
-
-            CALI_MARK_BEGIN(comp);
-            CALI_MARK_BEGIN(comp_large);
-            nums = merge(chunk, own_chunk_size, chunk_received, received_chunk_size);
             free(chunk);
             free(chunk_received);
             chunk = nums;
             own_chunk_size = own_chunk_size + received_chunk_size;
-            CALI_MARK_END(comp_large);
-            CALI_MARK_END(comp);
         }
     }
  
+    time_taken += MPI_Wtime();
+
 
     if(proc_id == 0) {
         cout << "MASTER RANK" << endl;
-        for(int i = 0; i < size; i++) {
-            cout << nums[i] << " ";
+        int local_sorted = confirm_sorted(nums, size);
+
+        if(local_sorted == 1) {
+            cout << "Correctness Check Passed!" << endl;
         }
-        cout << endl;
+        else {
+            cout << "Correctness Check Failed..." << endl;
+        }
     }
 
     adiak::init(NULL);
@@ -258,4 +288,5 @@ int main (int argc, char *argv[]) {
 
     MPI_Finalize();
     free(nums);
+    
 }

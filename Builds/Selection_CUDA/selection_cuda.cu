@@ -127,12 +127,6 @@ __global__ void swap_step(unsigned int*nums, int* min_index, int index) {
     nums[index] = nums[*min_index];
     nums[*min_index] = temp;
 }
-void print_list(unsigned int* nums) {
-    for(unsigned int i = 0; i < NUM_VALS; i++) {
-	cout << nums[i] << " ";
-    }
-    cout << endl;
-}
 void selection_sort(unsigned int* nums) {
     unsigned int *dev_nums, *min_num;
     int* min_index;
