@@ -27,6 +27,7 @@ const char* comp = "comp";
 const char* comp_large = "comp_large";
 const char* comm = "comm";
 const char* comm_large = "comm_large";
+const char* comm_small = "comm_small";
 const char* comm_bcast = "comm_MPI_BCAST";
 const char* comm_scatter = "comm_MPI_SCATTER";
 const char* comm_gather = "comm_MPI_GATHER";
@@ -34,7 +35,6 @@ const char* comm_send = "comm_MPI_SEND";
 const char* comm_receive = "comm_MPI_RECEIVE";
 const char* data_init_MPI_GATHER = "data_init_MPI_GATHER";
 const char* correctness_check = "correctness_check";
-
 void random_fill(int* local_nums, int size) {
     for(int i = 0; i < local_size; i++) {
         local_nums[i] = rand() % size;
@@ -212,13 +212,13 @@ int main (int argc, char *argv[]) {
             CALI_MARK_BEGIN(comm_large);
             CALI_MARK_BEGIN(comm_receive);
             MPI_Recv(chunk_received, received_chunk_size, MPI_INT, proc_id + step, 0, MPI_COMM_WORLD, &status);
-            CALI_MARK_END(comm_send);
             CALI_MARK_END(comm_receive);
+            CALI_MARK_END(comm_large);
             CALI_MARK_END(comm);
 
 
-            CALI_MARK_START(comp);
-            CALI_MARK_START(comp_large);
+            CALI_MARK_BEGIN(comp);
+            CALI_MARK_BEGIN(comp_large);
             nums = merge(chunk, own_chunk_size, chunk_received, received_chunk_size);
             free(chunk);
             free(chunk_received);
