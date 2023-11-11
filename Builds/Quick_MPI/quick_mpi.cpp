@@ -155,9 +155,8 @@ void fill_array(int* nums, int size, const char* input_type) {
 
 int confirm_sorted(int* nums, int size) {
     CALI_MARK_BEGIN(correctness_check);
-    for(int i = 0; i < local_size; i++) {
-        int index = i + offset;
-        if(index < size - 1 && nums[index] > nums[index + 1]) {
+    for(int i = 0; i < size - 1; i++) {
+        if(nums[i] > nums[i + 1]) {
             return 0;
         }
     }
@@ -266,26 +265,18 @@ int main (int argc, char *argv[]) {
  
     time_taken += MPI_Wtime();
 
-    int sorted = 1;
-    int local_sorted = confirm_sorted(nums, size);
-
-    CALI_MARK_BEGIN(comm);
-    CALI_MARK_BEGIN(comm_small);
-    CALI_MARK_BEGIN(reduce);
-    MPI_Reduce(&local_sorted, &sorted, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(reduce);
-    CALI_MARK_END(comm_small);
-    CALI_MARK_END(comm);
-
 
     if(proc_id == 0) {
         cout << "MASTER RANK" << endl;
+        
         for(int i = 0; i < size; i++) {
             cout << nums[i] << " ";
         }
         cout << endl;
 
-        if(sorted == 1) {
+        int local_sorted = confirm_sorted(nums, size);
+
+        if(local_sorted == 1) {
             cout << "Correctness Check Passed!" << endl;
         }
         else {
