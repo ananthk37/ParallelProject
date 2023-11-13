@@ -30,6 +30,15 @@ const char *correctness_check = "correctness_check";
 const char *correctness_h2d = "correctness_h2d";
 const char *correctness_d2h = "correctness_d2h";
 
+void printArray(float *arr, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        printf("%f ", arr[i]);
+    }
+    printf("\n");
+}
+
 __global__ void random_fill(float *nums, int size, const char *input_type)
 {
     int index = threadIdx.x + blockDim.x * blockIdx.x;
@@ -166,6 +175,62 @@ bool confirm_sorted(float *nums)
     return sorted;
 }
 
+void mergeHost(float *array, int const left, int const mid,
+               int const right)
+{
+    int const subArrayOne = mid - left + 1;
+    int const subArrayTwo = right - mid;
+
+    // Create temp arrays
+    auto *leftArray = new float[subArrayOne],
+         *rightArray = new float[subArrayTwo];
+
+    // Copy data to temp arrays leftArray[] and rightArray[]
+    for (auto i = 0; i < subArrayOne; i++)
+        leftArray[i] = array[left + i];
+    for (auto j = 0; j < subArrayTwo; j++)
+        rightArray[j] = array[mid + 1 + j];
+
+    auto indexOfSubArrayOne = 0, indexOfSubArrayTwo = 0;
+    int indexOfMergedArray = left;
+
+    // Merge the temp arrays back into array[left..right]
+    while (indexOfSubArrayOne < subArrayOne && indexOfSubArrayTwo < subArrayTwo)
+    {
+        if (leftArray[indexOfSubArrayOne] <= rightArray[indexOfSubArrayTwo])
+        {
+            array[indexOfMergedArray] = leftArray[indexOfSubArrayOne];
+            indexOfSubArrayOne++;
+        }
+        else
+        {
+            array[indexOfMergedArray] = rightArray[indexOfSubArrayTwo];
+            indexOfSubArrayTwo++;
+        }
+        indexOfMergedArray++;
+    }
+
+    // Copy the remaining elements of
+    // left[], if there are any
+    while (indexOfSubArrayOne < subArrayOne)
+    {
+        array[indexOfMergedArray] = leftArray[indexOfSubArrayOne];
+        indexOfSubArrayOne++;
+        indexOfMergedArray++;
+    }
+
+    // Copy the remaining elements of
+    // right[], if there are any
+    while (indexOfSubArrayTwo < subArrayTwo)
+    {
+        array[indexOfMergedArray] = rightArray[indexOfSubArrayTwo];
+        indexOfSubArrayTwo++;
+        indexOfMergedArray++;
+    }
+    delete[] leftArray;
+    delete[] rightArray;
+}
+
 __device__ void merge(float *data, float *temp, int left, int mid, int right)
 {
     int i = left;
@@ -207,16 +272,24 @@ __device__ void merge(float *data, float *temp, int left, int mid, int right)
     }
 }
 
-__global__ void mergeSort(float *data, float *temp, int n)
+__global__ void mergeSort(float *data, float *temp, int n, int chunkSize)
 {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+    // Calculate the range of elements to be sorted in this launch
+    int start = tid * chunkSize;
+    int end = min(start + chunkSize - 1, n - 1);
+
+    // Perform merge sort for the specified range
     for (int currSize = 1; currSize < n; currSize *= 2)
     {
-        for (int left = 0; left < n - 1; left += 2 * currSize)
+        for (int left = start; left < end; left += 2 * currSize)
         {
-            int mid = min(left + currSize - 1, n - 1);
-            int right = min(left + 2 * currSize - 1, n - 1);
+            int mid = min(left + currSize - 1, end);
+            int right = min(left + 2 * currSize - 1, end);
             merge(data, temp, left, mid, right);
         }
+        __syncthreads(); // Synchronize threads before the next iteration
     }
 }
 
@@ -260,10 +333,15 @@ int main(int argc, char *argv[])
     // Launch the CUDA kernel to perform merge sort
     CALI_MARK_BEGIN(comp);
     CALI_MARK_BEGIN(comp_large);
-    mergeSort<<<1, 1>>>(d_data, d_temp, NUM_VALS);
+    int chunkSize = 256; // Adjust the chunk size as needed
+
+    for (int i = 0; i < NUM_VALS / chunkSize; ++i)
+    {
+        mergeSort<<<BLOCKS, THREADS>>>(d_data, d_temp, NUM_VALS, chunkSize);
+        cudaDeviceSynchronize();
+    }
     CALI_MARK_END(comp_large);
     CALI_MARK_END(comp);
-    cudaDeviceSynchronize();
 
     // Copy the sorted data back to the host
     CALI_MARK_BEGIN(comm);
@@ -273,12 +351,20 @@ int main(int argc, char *argv[])
     CALI_MARK_END(comp_d2h);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
-    
+
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    // Perform the final merge to combine all chunks
+    for (int i = 1; i < NUM_VALS / chunkSize; ++i)
+    {
+        mergeHost(h_data, 0, i * chunkSize - 1, std::min(((i + 1) * chunkSize - 1), NUM_VALS - 1));
+    }
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
+
     // Clean up and free memory
     cudaFree(d_data);
     cudaFree(d_temp);
-
-    // Perform any other necessary operations with the sorted data
 
     // check correctness
     if (confirm_sorted(h_data))
@@ -290,6 +376,24 @@ int main(int argc, char *argv[])
         cout << "Correctness Check Failed..." << endl;
     }
 
+    adiak::init(NULL);
+    adiak::launchdate();    // launch date of the job
+    adiak::libraries();     // Libraries used
+    adiak::cmdline();       // Command line used to launch the job
+    adiak::clustername();   // Name of the cluster
+    adiak::value("Algorithm", "Merge Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
+    adiak::value("ProgrammingModel", "CUDA"); // e.g., "MPI", "CUDA", "MPIwithCUDA"
+    adiak::value("Datatype", "float"); // The datatype of input elements (e.g., double, int, float)
+    adiak::value("SizeOfDatatype", sizeof(float)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
+    adiak::value("InputSize", NUM_VALS); // The number of elements in input dataset (1000)
+    adiak::value("InputType", input_type); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
+    adiak::value("num_threads", NUM_VALS); // The number of CUDA or OpenMP threads
+    adiak::value("num_blocks", BLOCKS); // The number of CUDA blocks 
+    adiak::value("group_num", 3); // The number of your group (integer, e.g., 1, 10)
+    adiak::value("implementation_source", "AI"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
+    
+    mgr.stop();
+    mgr.flush();
+
     free(h_data);
-    return 0;
 }

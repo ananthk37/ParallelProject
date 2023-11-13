@@ -226,6 +226,7 @@ int main(int argc, char *argv[]) {
     NUM_VALS = atoi(argv[3]);
     BLOCKS = NUM_VALS / THREADS;
 
+    printf("Input Type: %s\n", input_type);
     printf("Number of threads: %d\n", THREADS);
     printf("Number of values: %d\n", NUM_VALS);
     printf("Number of blocks: %d\n\n", BLOCKS);

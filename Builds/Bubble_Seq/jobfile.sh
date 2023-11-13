@@ -3,7 +3,7 @@
 ## echo '=====================JOB STARTING=========================='
 #SBATCH --job-name=sequentialbubble              ### Job Name
 #SBATCH --output=output.%j        ### File in which to store job output
-#SBATCH --time=0-00:02:00       ### Wall clock time limit in Days-HH:MM:SS
+#SBATCH --time=0-02:00:00       ### Wall clock time limit in Days-HH:MM:SS
 #SBATCH --nodes=1               ### Node count required for the job, default = 1
 #SBATCH --mem=8G                ### memory per node
 #SBATCH --exclusive             ### no shared resources within a node
@@ -14,4 +14,4 @@ time_now=$(date +%s)
 input_type=$1
 arr_size=$2
 
-CALI_CONFIG="spot(output=SEQ-${input_type}-v${arr_size}.cali)" ./bubble_seq $input_type $arr_size
+CALI_CONFIG="spot(output=Bubble-Seq-${input_type}-v${arr_size}.cali)" ./bubble_seq $input_type $arr_size
