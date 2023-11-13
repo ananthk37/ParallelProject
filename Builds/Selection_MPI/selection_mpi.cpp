@@ -163,7 +163,6 @@ int main (int argc, char *argv[]) {
     cali::ConfigManager mgr;
     mgr.start();
     MPI_Status status;
-    double time_taken;
 
     // get MPI info
     MPI_Init(&argc, &argv);
@@ -179,11 +178,7 @@ int main (int argc, char *argv[]) {
     fill_array(nums, size, input_type);
 
     // test print
-    if(proc_id == 0) {
-        cout << "MASTER RANK" << endl;
-    }
 
-    time_taken -= MPI_Wtime();
 
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
@@ -253,11 +248,9 @@ int main (int argc, char *argv[]) {
         }
     }
  
-    time_taken += MPI_Wtime();
 
 
     if(proc_id == 0) {
-        cout << "MASTER RANK" << endl;
         int local_sorted = confirm_sorted(nums, size);
 
         if(local_sorted == 1) {
