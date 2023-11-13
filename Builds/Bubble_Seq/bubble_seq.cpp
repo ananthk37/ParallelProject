@@ -98,6 +98,10 @@ int main (int argc, char *argv[]) {
     int size = atoi(argv[2]);
     float* nums = new float [size];
 
+    printf("Input Type: %s\n", input_type);
+    printf("Number of processes: %d\n", num_procs);
+    printf("Number of values: %d\n\n", size);
+
     // initialize data in array
     fill_array(nums, size);
     cout << "Data Initialized" << endl;
