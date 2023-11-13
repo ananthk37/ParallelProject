@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
     adiak::libraries();                                   // Libraries used
     adiak::cmdline();                                     // Command line used to launch the job
     adiak::clustername();                                 // Name of the cluster
-    adiak::value("Algorithm", "Bubble Sort");             // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
+    adiak::value("Algorithm", "Merge Sort");             // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
     adiak::value("ProgrammingModel", "Sequential");       // e.g., "MPI", "CUDA", "MPIwithCUDA"
     adiak::value("Datatype", "float");                    // The datatype of input elements (e.g., double, int, float)
     adiak::value("SizeOfDatatype", sizeof(float));        // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
