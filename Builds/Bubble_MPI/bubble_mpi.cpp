@@ -22,8 +22,6 @@ int	num_procs,             /* number of processes in partition */
 const char* data_init = "data_init";
 const char* comp = "comp";
 const char* comp_large = "comp_large";
-const char* local_sort = "local_sort";
-const char* merge_and_partition = "merge_and_partition";
 const char* comm = "comm";
 const char* comm_small = "comm_small";
 const char* comm_large = "comm_large";
@@ -122,9 +120,7 @@ void bubble_sort(float* local_nums) {
     // sort the local data to begin
     CALI_MARK_BEGIN(comp);
     CALI_MARK_BEGIN(comp_large);
-    CALI_MARK_BEGIN(local_sort);
     sort(local_nums, local_nums + local_size);
-    CALI_MARK_END(local_sort);
     CALI_MARK_END(comp_large);
     CALI_MARK_END(comp);
     float* partner_nums = new float[local_size];
@@ -144,7 +140,6 @@ void bubble_sort(float* local_nums) {
 
                 CALI_MARK_BEGIN(comp);
                 CALI_MARK_BEGIN(comp_large);
-                CALI_MARK_BEGIN(merge_and_partition);
                 // even rank, gets low nums
                 if(proc_id % 2 == 0) {
                     merge_low(local_nums, partner_nums);
@@ -153,7 +148,6 @@ void bubble_sort(float* local_nums) {
                 else {
                     merge_high(local_nums, partner_nums);
                 }
-                CALI_MARK_END(merge_and_partition);
                 CALI_MARK_END(comp_large);
                 CALI_MARK_END(comp);
             }    
@@ -173,7 +167,6 @@ void bubble_sort(float* local_nums) {
                 
                 CALI_MARK_BEGIN(comp);
                 CALI_MARK_BEGIN(comp_large);
-                CALI_MARK_BEGIN(merge_and_partition);
                 // even rank, gets high nums
                 if(proc_id % 2 == 0) {
                     merge_high(local_nums, partner_nums);
@@ -182,7 +175,6 @@ void bubble_sort(float* local_nums) {
                 else {
                     merge_low(local_nums, partner_nums);
                 }
-                CALI_MARK_END(merge_and_partition);
                 CALI_MARK_END(comp_large);
                 CALI_MARK_END(comp);      
             }           
@@ -219,6 +211,12 @@ int main (int argc, char *argv[]) {
     const char* input_type = argv[1];
     int size = atoi(argv[2]);
     float* nums = new float[size];
+
+    if(proc_id == 0) {
+        printf("Input Type: %s\n", input_type);
+        printf("Number of processes: %d\n", num_procs);
+        printf("Number of values: %d\n\n", size);
+    }
 
     // create local values
     avg = floor(size / num_procs);
