@@ -1,0 +1,86 @@
+__rec=node,id=12,attr=10,data=64,parent=3
+__rec=node,id=13,attr=8,data=attribute.alias,parent=12
+__rec=node,id=14,attr=8,data=attribute.unit,parent=12
+__rec=node,id=96,attr=14,data=sec,parent=5
+__rec=node,id=97,attr=13,data=Min time/rank,parent=96
+__rec=node,id=98,attr=10,data=65,parent=97
+__rec=node,id=99,attr=8,data=min#inclusive#sum#time.duration,parent=98
+__rec=node,id=100,attr=13,data=Max time/rank,parent=96
+__rec=node,id=101,attr=10,data=65,parent=100
+__rec=node,id=102,attr=8,data=max#inclusive#sum#time.duration,parent=101
+__rec=node,id=103,attr=13,data=Avg time/rank,parent=96
+__rec=node,id=104,attr=10,data=65,parent=103
+__rec=node,id=105,attr=8,data=avg#inclusive#sum#time.duration,parent=104
+__rec=node,id=108,attr=10,data=193,parent=5
+__rec=node,id=109,attr=8,data=avg.sum#inclusive#sum#time.duration,parent=108
+__rec=node,id=106,attr=10,data=193,parent=2
+__rec=node,id=107,attr=8,data=avg.count#inclusive#sum#time.duration,parent=106
+__rec=node,id=110,attr=13,data=Total time,parent=96
+__rec=node,id=111,attr=10,data=65,parent=110
+__rec=node,id=112,attr=8,data=sum#inclusive#sum#time.duration,parent=111
+__rec=node,id=113,attr=13,data=Node order,parent=2
+__rec=node,id=114,attr=10,data=65,parent=113
+__rec=node,id=115,attr=8,data=min#min#aggregate.slot,parent=114
+__rec=node,id=15,attr=8,data=spot.channel,parent=12
+__rec=node,id=132,attr=15,data=regionprofile
+__rec=ctx,ref=132,attr=99=102=105=109=107=112=115,data=0.003303=0.003303=0.003303=0.003303=1=0.003303=0
+__rec=node,id=37,attr=10,data=276,parent=3
+__rec=node,id=38,attr=8,data=region,parent=37
+__rec=node,id=39,attr=38,data=main
+__rec=node,id=118,attr=13,data=Avg GPU Time/rank,parent=96
+__rec=node,id=119,attr=10,data=65,parent=118
+__rec=node,id=120,attr=8,data=avg#iscale#cupti.activity.duration,parent=119
+__rec=node,id=122,attr=8,data=avg.sum#iscale#cupti.activity.duration,parent=108
+__rec=node,id=121,attr=8,data=avg.count#iscale#cupti.activity.duration,parent=106
+__rec=node,id=123,attr=13,data=Min GPU Time/rank,parent=96
+__rec=node,id=124,attr=10,data=65,parent=123
+__rec=node,id=125,attr=8,data=min#iscale#cupti.activity.duration,parent=124
+__rec=node,id=126,attr=13,data=Max GPU Time/rank,parent=96
+__rec=node,id=127,attr=10,data=65,parent=126
+__rec=node,id=128,attr=8,data=max#iscale#cupti.activity.duration,parent=127
+__rec=node,id=129,attr=13,data=Total GPU Time,parent=96
+__rec=node,id=130,attr=10,data=65,parent=129
+__rec=node,id=131,attr=8,data=sum#iscale#cupti.activity.duration,parent=130
+__rec=ctx,ref=39=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=1.749433=1.749433=1.749433=1.749433=1=1.749433=1.030803=1.030803=1=1.030803=1.030803=1.030803=1
+__rec=node,id=44,attr=38,data=comm,parent=39
+__rec=ctx,ref=44=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.001376=0.001376=0.001376=0.001376=1=0.001376=0.000121=0.000121=1=0.000121=0.000121=0.000121=2
+__rec=node,id=45,attr=38,data=comm_large,parent=44
+__rec=ctx,ref=45=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.001232=0.001232=0.001232=0.001232=1=0.001232=0.000121=0.000121=1=0.000121=0.000121=0.000121=3
+__rec=node,id=46,attr=38,data=data_init_h2d,parent=45
+__rec=ctx,ref=46=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.000253=0.000253=0.000253=0.000253=1=0.000253=0.000024=0.000024=1=0.000024=0.000024=0.000024=4
+__rec=node,id=47,attr=38,data=data_init,parent=39
+__rec=ctx,ref=47=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.000151=0.000151=0.000151=0.000151=1=0.000151=0.000005=0.000005=1=0.000005=0.000005=0.000005=5
+__rec=node,id=48,attr=38,data=data_init_d2h,parent=45
+__rec=ctx,ref=48=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.000415=0.000415=0.000415=0.000415=1=0.000415=0.000023=0.000023=1=0.000023=0.000023=0.000023=6
+__rec=node,id=49,attr=38,data=comp_h2d,parent=45
+__rec=ctx,ref=49=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.000119=0.000119=0.000119=0.000119=1=0.000119=0.000025=0.000025=1=0.000025=0.000025=0.000025=7
+__rec=node,id=50,attr=38,data=comp,parent=39
+__rec=ctx,ref=50=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=1.099147=1.099147=1.099147=1.099147=1=1.099147=1.030672=1.030672=1=1.030672=1.030672=1.030672=8
+__rec=node,id=51,attr=38,data=comp_large,parent=50
+__rec=ctx,ref=51=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=1.099103=1.099103=1.099103=1.099103=1=1.099103=1.030672=1.030672=1=1.030672=1.030672=1.030672=9
+__rec=node,id=52,attr=38,data=comp_d2h,parent=45
+__rec=ctx,ref=52=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.000185=0.000185=0.000185=0.000185=1=0.000185=0.000022=0.000022=1=0.000022=0.000022=0.000022=10
+__rec=node,id=53,attr=38,data=correctness_h2d,parent=45
+__rec=ctx,ref=53=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.000115=0.000115=0.000115=0.000115=1=0.000115=0.000025=0.000025=1=0.000025=0.000025=0.000025=11
+__rec=node,id=54,attr=38,data=correctness_check,parent=39
+__rec=ctx,ref=54=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.000035=0.000035=0.000035=0.000035=1=0.000035=0.000004=0.000004=1=0.000004=0.000004=0.000004=12
+__rec=node,id=55,attr=38,data=correctness_d2h,parent=45
+__rec=ctx,ref=55=132,attr=99=102=105=109=107=112=120=122=121=125=128=131=115,data=0.000023=0.000023=0.000023=0.000023=1=0.000023=0.000002=0.000002=1=0.000002=0.000002=0.000002=13
+__rec=node,id=135,attr=10,data=512,parent=3
+__rec=node,id=141,attr=8,data=spot.channels,parent=135
+__rec=node,id=140,attr=8,data=spot.options,parent=135
+__rec=node,id=138,attr=10,data=512,parent=1
+__rec=node,id=139,attr=8,data=spot.format.version,parent=138
+__rec=node,id=137,attr=8,data=spot.timeseries.metrics,parent=135
+__rec=node,id=136,attr=8,data=spot.metrics,parent=135
+__rec=node,id=19,attr=10,data=1612,parent=3
+__rec=node,id=20,attr=8,data=cali.caliper.version,parent=19
+__rec=node,id=21,attr=20,data=2.10.0
+__rec=node,id=142,attr=136,data=min#inclusive#sum#time.duration\,max#inclusive#sum#time.duration\,avg#inclusive#sum#time.duration\,sum#inclusive#sum#time.duration\,avg#iscale#cupti.activity.duration\,min#iscale#cupti.activity.duration\,max#iscale#cupti.activity.duration\,sum#iscale#cupti.activity.duration\,min#min#aggregate.slot,parent=21
+__rec=node,id=143,attr=137,data=,parent=142
+__rec=node,id=144,attr=139,data=2,parent=143
+__rec=node,id=145,attr=140,data=cuda.gputime\,node.order,parent=144
+__rec=node,id=146,attr=141,data=regionprofile,parent=145
+__rec=node,id=133,attr=8,data=cali.channel,parent=19
+__rec=node,id=134,attr=133,data=spot
+__rec=globals,ref=146=134
