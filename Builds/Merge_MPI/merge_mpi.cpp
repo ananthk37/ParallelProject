@@ -32,10 +32,8 @@ const char *merge_and_partition = "merge_and_partition";
 const char *comm = "comm";
 const char *comm_small = "comm_small";
 const char *comm_large = "comm_large";
-const char *sendrecv = "MPI_Sendrecv";
-const char *bcast = "MPI_Bcast";
-const char *gather = "MPI_Gather";
-const char *reduce = "MPI_Reduce";
+const char *send = "MPI_Send";
+const char *recieve = "MPI_Recv";
 const char *correctness_check = "correctness_check";
 
 void random_fill(float *local_nums, int size)
@@ -165,13 +163,20 @@ void mergeSort(float *arr, int l, int r)
     if (l < r)
     {
         int m = l + (r - l) / 2;
+        CALI_MARK_END(local_sort);
+        CALI_MARK_END(comp_large);
+        CALI_MARK_END(comp);
         mergeSort(arr, l, m);
         mergeSort(arr, m + 1, r);
+        CALI_MARK_BEGIN(comp);
+        CALI_MARK_BEGIN(comp_large);
+        CALI_MARK_BEGIN(local_sort);
         merge(arr, l, m, r);
+        CALI_MARK_END(local_sort);
+        CALI_MARK_END(comp_large);
+        CALI_MARK_END(comp);
     }
-    CALI_MARK_END(local_sort);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
+    
 }
 
 int main(int argc, char **argv)
@@ -221,7 +226,9 @@ int main(int argc, char **argv)
             std::vector<float> received_data(local_size);
             CALI_MARK_BEGIN(comm);
             CALI_MARK_BEGIN(comm_large);
+            CALI_MARK_BEGIN(recieve);
             MPI_Recv(received_data.data(), local_size, MPI_FLOAT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            CALI_MARK_END(recieve);
             CALI_MARK_END(comm_large);
             CALI_MARK_END(comm);
             for (int j = 0; j < local_size; j++)
@@ -247,7 +254,9 @@ int main(int argc, char **argv)
         mergeSort(local_nums, 0, local_size - 1);
         CALI_MARK_BEGIN(comm);
         CALI_MARK_BEGIN(comm_large);
+        CALI_MARK_BEGIN(send);
         MPI_Send(local_nums, local_size, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+        CALI_MARK_END(send);
         CALI_MARK_END(comm_large);
         CALI_MARK_END(comm);
     }
