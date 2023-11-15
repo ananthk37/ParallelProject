@@ -16,6 +16,13 @@ const char* comp_large = "comp_large";
 const char* comm = "comm";
 const char* correctness_check = "correctness_check";
 
+void print_array(float* nums, int n) {
+    for(int i = 0; i < n; i++) {
+        cout << nums[i] << " ";
+    }
+    cout << endl;
+}
+
 void random_fill(float* nums, int n) {
     for(int i = 0; i < n; i++) {
         nums[i] = rand() % n;
@@ -35,8 +42,11 @@ void reverse_fill(float* nums, int n) {
 }
 
 void nearly_fill(float* nums, int n) {
+    sorted_fill(nums, n);
     for(int i = 0; i < n; i++) {
-        nums[i] = (rand() % n) / (n - i);
+        if(rand() % 100 == 0) {
+            swap(nums[i], nums[rand() % n]);
+        }
     }
 }
 
@@ -99,29 +109,21 @@ int main (int argc, char *argv[]) {
     float* nums = new float [size];
 
     printf("Input Type: %s\n", input_type);
-    printf("Number of processes: %d\n", num_procs);
     printf("Number of values: %d\n\n", size);
 
     // initialize data in array
-    fill_array(nums, size);
+    fill_array(nums, size, input_type);
     cout << "Data Initialized" << endl;
-    // for(int i = 0; i < size; i++) {
-    //     cout << nums[i] << " ";
-    // }
-    // cout << endl;
+    // print_array(nums, size);
 
     // perform sort
-    bubble_sort(nums, size, input_type);
+    bubble_sort(nums, size);
     cout << "Bubble Sort Completed" << endl;
 
     // check for correctedness
     CALI_MARK_BEGIN(correctness_check);
     confirm_sorted(nums, size);
     CALI_MARK_END(correctness_check);
-    // for(int i = 0; i < size; i++) {
-    //     cout << nums[i] << " ";
-    // }
-    // cout << endl;
 
     // Metadata
     adiak::init(NULL);
