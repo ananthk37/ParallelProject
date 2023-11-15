@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <cmath>
 #include <limits.h>
+#include <algorithm>
 
 #include <caliper/cali.h>
 #include <caliper/cali-manager.h>
@@ -52,9 +53,12 @@ void reverse_fill(int* local_nums, int size) {
     }
 }
 
-void nearly_fill(int* local_nums, int size) {
+void nearly_fill(float* local_nums, int size) {
+    sorted_fill(local_nums);
     for(int i = 0; i < local_size; i++) {
-        local_nums[i] = (rand() % size) / (size - offset - i);
+        if(rand() % 100 == 0) {
+            swap(local_nums[i], local_nums[rand() % local_size]);
+        }
     }
 }
 
