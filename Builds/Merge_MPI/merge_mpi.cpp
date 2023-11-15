@@ -34,6 +34,7 @@ const char *comm_small = "comm_small";
 const char *comm_large = "comm_large";
 const char *send = "MPI_Send";
 const char *recieve = "MPI_Recv";
+const char* reduce = "MPI_Reduce";
 const char *correctness_check = "correctness_check";
 
 void random_fill(float *local_nums, int size)
@@ -91,15 +92,12 @@ void fill_array(float *local_nums, int size, const char *input_type)
     CALI_MARK_END(data_init);
 }
 
-int confirm_sorted(float *nums, int size)
-{
+int confirm_sorted(float* nums, int size) {
     CALI_MARK_BEGIN(correctness_check);
-    for (int i = 0; i < size; i++)
-    {
-        int index = i;
-        //cout << nums[index] << endl;
-        if (index < size - 1 && nums[index] > nums[index + 1])
-        {
+    for(int i = 0; i < local_size; i++) {
+        int index = i + offset;
+        if(index < size - 1 && nums[index] > nums[index + 1]) {
+            CALI_MARK_END(correctness_check);
             return 0;
         }
     }
@@ -157,26 +155,13 @@ void merge(float *arr, int l, int m, int r)
 
 void mergeSort(float *arr, int l, int r)
 {
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
-    CALI_MARK_BEGIN(local_sort);
     if (l < r)
     {
         int m = l + (r - l) / 2;
-        CALI_MARK_END(local_sort);
-        CALI_MARK_END(comp_large);
-        CALI_MARK_END(comp);
         mergeSort(arr, l, m);
         mergeSort(arr, m + 1, r);
-        CALI_MARK_BEGIN(comp);
-        CALI_MARK_BEGIN(comp_large);
-        CALI_MARK_BEGIN(local_sort);
         merge(arr, l, m, r);
-        CALI_MARK_END(local_sort);
-        CALI_MARK_END(comp_large);
-        CALI_MARK_END(comp);
     }
-    
 }
 
 int main(int argc, char **argv)
@@ -203,10 +188,9 @@ int main(int argc, char **argv)
     local_size = (rank < extra) ? (avg + 1) : avg;
     offset = (rank < extra) ? (rank * avg + rank) : (rank * avg + extra);
     float *local_nums = new float[local_size];
-    int local_sorted = 1;
-
+    int local_sorted = 0;
     // fill array
-    fill_array(local_nums, size, input_type);
+    fill_array(local_nums, local_size, input_type);
     if (rank == 0)
     {
         cout << "Data Initialized" << endl;
@@ -216,13 +200,19 @@ int main(int argc, char **argv)
     if (rank == 0)
     {
         // Master's own chunk
+        CALI_MARK_BEGIN(comp);
+        CALI_MARK_BEGIN(comp_large);
+        CALI_MARK_BEGIN(local_sort);
         mergeSort(local_nums, 0, local_size - 1);
+        CALI_MARK_END(local_sort);
+        CALI_MARK_END(comp_large);
+        CALI_MARK_END(comp);
 
         // Merge sorted chunks received from workers
         std::vector<float> data(local_nums, local_nums + local_size);
         for (int i = 1; i < num_procs; i++)
         {
-            
+
             std::vector<float> received_data(local_size);
             CALI_MARK_BEGIN(comm);
             CALI_MARK_BEGIN(comm_large);
@@ -237,21 +227,25 @@ int main(int argc, char **argv)
             }
             CALI_MARK_BEGIN(comp);
             CALI_MARK_BEGIN(comp_large);
-            CALI_MARK_BEGIN(local_sort);
             merge(data.data(), 0, local_size * i - 1, local_size * (i + 1) - 1);
-            CALI_MARK_END(local_sort);
             CALI_MARK_END(comp_large);
             CALI_MARK_END(comp);
         }
-        
+
         delete[] nums;
         nums = data.data();
         local_sorted = confirm_sorted(nums, size);
-        
     }
     else
     {
+        CALI_MARK_BEGIN(comp);
+        CALI_MARK_BEGIN(comp_large);
+        CALI_MARK_BEGIN(local_sort);
         mergeSort(local_nums, 0, local_size - 1);
+        CALI_MARK_END(local_sort);
+        CALI_MARK_END(comp_large);
+        CALI_MARK_END(comp);
+
         CALI_MARK_BEGIN(comm);
         CALI_MARK_BEGIN(comm_large);
         CALI_MARK_BEGIN(send);
@@ -260,10 +254,12 @@ int main(int argc, char **argv)
         CALI_MARK_END(comm_large);
         CALI_MARK_END(comm);
     }
+    
+    
 
+    
     if (rank == 0)
     {
-        int local_sorted = 1;
         if (local_sorted == 1)
         {
             cout << "Correctness Check Passed!" << endl;
@@ -274,21 +270,20 @@ int main(int argc, char **argv)
         }
     }
 
-
     adiak::init(NULL);
-    adiak::launchdate();                               // launch date of the job
-    adiak::libraries();                                // Libraries used
-    adiak::cmdline();                                  // Command line used to launch the job
-    adiak::clustername();                              // Name of the cluster
-    adiak::value("Algorithm", "Merge Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
-    adiak::value("ProgrammingModel", "MPI");           // e.g., "MPI", "CUDA", "MPIwithCUDA"
-    adiak::value("Datatype", "float");                 // The datatype of input elements (e.g., double, int, float)
-    adiak::value("SizeOfDatatype", sizeof(float));     // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
-    adiak::value("InputSize", size);                   // The number of elements in input dataset (1000)
-    adiak::value("InputType", input_type);             // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
-    adiak::value("num_procs", num_procs);              // The number of processors (MPI ranks)
-    adiak::value("group_num", 3);                      // The number of your group (integer, e.g., 1, 10)
-    adiak::value("implementation_source", "AI");       // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
+    adiak::launchdate();                           // launch date of the job
+    adiak::libraries();                            // Libraries used
+    adiak::cmdline();                              // Command line used to launch the job
+    adiak::clustername();                          // Name of the cluster
+    adiak::value("Algorithm", "Merge Sort");       // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
+    adiak::value("ProgrammingModel", "MPI");       // e.g., "MPI", "CUDA", "MPIwithCUDA"
+    adiak::value("Datatype", "float");             // The datatype of input elements (e.g., double, int, float)
+    adiak::value("SizeOfDatatype", sizeof(float)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
+    adiak::value("InputSize", size);               // The number of elements in input dataset (1000)
+    adiak::value("InputType", input_type);         // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
+    adiak::value("num_procs", num_procs);          // The number of processors (MPI ranks)
+    adiak::value("group_num", 3);                  // The number of your group (integer, e.g., 1, 10)
+    adiak::value("implementation_source", "AI");   // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
 
     mgr.stop();
     mgr.flush();

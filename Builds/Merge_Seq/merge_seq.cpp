@@ -3,6 +3,7 @@
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 
 #include <caliper/cali.h>
 #include <caliper/cali-manager.h>
@@ -167,17 +168,20 @@ void merge(float array[], int const left, int const mid,
 // of the sub-array of arr to be sorted
 void mergeSort(float array[], int const begin, int const end)
 {
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
+    //CALI_MARK_BEGIN(comp);
+    //CALI_MARK_BEGIN(comp_large);
     if (begin >= end)
         return;
-
+    //CALI_MARK_END(comp_large);
+    //CALI_MARK_END(comp);
     int mid = begin + (end - begin) / 2;
     mergeSort(array, begin, mid);
     mergeSort(array, mid + 1, end);
+    //CALI_MARK_BEGIN(comp);
+    //CALI_MARK_BEGIN(comp_large);
     merge(array, begin, mid, end);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
+    //CALI_MARK_END(comp_large);
+    //CALI_MARK_END(comp);
 }
 
 // UTILITY FUNCTIONS
@@ -216,13 +220,18 @@ int main(int argc, char *argv[])
 
     fill_array(nums, size, input_type);
     cout << "Data Initialized" << endl;
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
     mergeSort(nums, 0, size - 1);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
     cout << "Merge Sort Completed" << endl;
     CALI_MARK_BEGIN(correctness_check);
     confirm_sorted(nums, size);
     CALI_MARK_END(correctness_check);
 
     // Metadata
+    
     adiak::init(NULL);
     adiak::launchdate();                                  // launch date of the job
     adiak::libraries();                                   // Libraries used
@@ -239,6 +248,6 @@ int main(int argc, char *argv[])
 
     mgr.stop();
     mgr.flush();
-
+    
     delete[] nums;
 }
