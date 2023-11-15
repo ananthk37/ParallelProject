@@ -51,8 +51,11 @@ void reverse_fill(float* local_nums, int size) {
 }
 
 void nearly_fill(float* local_nums, int size) {
+    sorted_fill(local_nums);
     for(int i = 0; i < local_size; i++) {
-        local_nums[i] = (rand() % size) / (size - offset - i);
+        if(rand() % 100 == 0) {
+            swap(local_nums[i], local_nums[rand() % local_size]);
+        }
     }
 }
 
