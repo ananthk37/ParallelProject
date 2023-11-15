@@ -367,142 +367,21 @@ Instrument your code, and turn in at least one Caliper file per algorithm;
 if you have implemented an MPI and a CUDA version of your algorithm,
 turn in a Caliper file for each.
 
-### 3a. Caliper instrumentation
-Please use the caliper build `/scratch/group/csce435-f23/Caliper/caliper/share/cmake/caliper` 
-(same as lab1 build.sh) to collect caliper files for each experiment you run.
-
-Your Caliper regions should resemble the following calltree
-(use `Thicket.tree()` to see the calltree collected on your runs):
-```
-main
-|_ data_init
-|_ comm
-|    |_ MPI_Barrier
-|    |_ comm_small  // When you broadcast just a few elements, such as splitters in Sample sort
-|    |   |_ MPI_Bcast
-|    |   |_ MPI_Send
-|    |   |_ cudaMemcpy
-|    |_ comm_large  // When you send all of the data the process has
-|        |_ MPI_Send
-|        |_ MPI_Bcast
-|        |_ cudaMemcpy
-|_ comp
-|    |_ comp_small  // When you perform the computation on a small number of elements, such as sorting the splitters in Sample sort
-|    |_ comp_large  // When you perform the computation on all of the data the process has, such as sorting all local elements
-|_ correctness_check
-```
-
-Required code regions:
-- `main` - top-level main function.
-    - `data_init` - the function where input data is generated or read in from file.
-    - `correctness_check` - function for checking the correctness of the algorithm output (e.g., checking if the resulting data is sorted).
-    - `comm` - All communication-related functions in your algorithm should be nested under the `comm` region.
-      - Inside the `comm` region, you should create regions to indicate how much data you are communicating (i.e., `comm_small` if you are sending or broadcasting a few values, `comm_large` if you are sending all of your local values).
-      - Notice that auxillary functions like MPI_init are not under here.
-    - `comp` - All computation functions within your algorithm should be nested under the `comp` region.
-      - Inside the `comp` region, you should create regions to indicate how much data you are computing on (i.e., `comp_small` if you are sorting a few values like the splitters, `comp_large` if you are sorting values in the array).
-      - Notice that auxillary functions like data_init are not under here.
-
-All functions will be called from `main` and most will be grouped under either `comm` or `comp` regions, representing communication and computation, respectively. You should be timing as many significant functions in your code as possible. **Do not** time print statements or other insignificant operations that may skew the performance measurements.
-
-**Nesting Code Regions** - all computation code regions should be nested in the "comp" parent code region as following:
-```
-CALI_MARK_BEGIN("comp");
-CALI_MARK_BEGIN("comp_large");
-mergesort();
-CALI_MARK_END("comp_large");
-CALI_MARK_END("comp");
-```
-
-**Looped GPU kernels** - to time GPU kernels in a loop:
-```
-### Bitonic sort example.
-int count = 1;
-CALI_MARK_BEGIN("comp");
-CALI_MARK_BEGIN("comp_large");
-int j, k;
-/* Major step */
-for (k = 2; k <= NUM_VALS; k <<= 1) {
-    /* Minor step */
-    for (j=k>>1; j>0; j=j>>1) {
-        bitonic_sort_step<<<blocks, threads>>>(dev_values, j, k);
-        count++;
-    }
-}
-CALI_MARK_END("comp_large");
-CALI_MARK_END("comp");
-```
-
-**Calltree Examples**:
-
-```
-# Bitonic sort tree - CUDA looped kernel
-1.000 main
-├─ 1.000 comm
-│  └─ 1.000 comm_large
-│     └─ 1.000 cudaMemcpy
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
-
-```
-# Matrix multiplication example - MPI
-1.000 main
-├─ 1.000 comm
-│  ├─ 1.000 MPI_Barrier
-│  ├─ 1.000 comm_large
-│  │  ├─ 1.000 MPI_Recv
-│  │  └─ 1.000 MPI_Send
-│  └─ 1.000 comm_small
-│     ├─ 1.000 MPI_Recv
-│     └─ 1.000 MPI_Send
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
-
-```
-# Mergesort - MPI
-1.000 main
-├─ 1.000 comm
-│  ├─ 1.000 MPI_Barrier
-│  └─ 1.000 comm_large
-│     ├─ 1.000 MPI_Gather
-│     └─ 1.000 MPI_Scatter
-├─ 1.000 comp
-│  └─ 1.000 comp_large
-└─ 1.000 data_init
-```
-
-### 3b. Collect Metadata
-
-Have the following `adiak` code in your programs to collect metadata:
-```
-adiak::init(NULL);
-adiak::launchdate();    // launch date of the job
-adiak::libraries();     // Libraries used
-adiak::cmdline();       // Command line used to launch the job
-adiak::clustername();   // Name of the cluster
-adiak::value("Algorithm", algorithm); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
-adiak::value("ProgrammingModel", programmingModel); // e.g., "MPI", "CUDA", "MPIwithCUDA"
-adiak::value("Datatype", datatype); // The datatype of input elements (e.g., double, int, float)
-adiak::value("SizeOfDatatype", sizeOfDatatype); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
-adiak::value("InputSize", inputSize); // The number of elements in input dataset (1000)
-adiak::value("InputType", inputType); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
-adiak::value("num_procs", num_procs); // The number of processors (MPI ranks)
-adiak::value("num_threads", num_threads); // The number of CUDA or OpenMP threads
-adiak::value("num_blocks", num_blocks); // The number of CUDA blocks 
-adiak::value("group_num", group_number); // The number of your group (integer, e.g., 1, 10)
-adiak::value("implementation_source", implementation_source) // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
-```
-
-They will show up in the `Thicket.metadata` if the caliper file is read into Thicket.
-
-**See the `Builds/` directory to find the correct Caliper configurations to get the above metrics for CUDA, MPI, or OpenMP programs.** They will show up in the `Thicket.dataframe` when the Caliper file is read into Thicket.
+### Algorithm Descriptions
+1. Bubble Sort (Sequential): Each iteration of a bubble sort starts at the beginning of the array, comparing adjacent indecies until it reaches the end of the array, swapping elements when necessary. The range of indecies that will be compared for any given iteration is 0 to N-iterations-1. The algorithm will stop after N-1 iterations or if no swaps occur during a given iteration, indicating the array is already sorted. The runtime of sequential bubble sort is $O(n^2)$.
+2. Odd-Even Sort (CUDA): Odd-Even sort is a parallel implementation of bubble sort. When implemented on CUDA, the algorithm starts with copying the starting array from the host to the device. Next, N iterations of the sort are run in the CUDA kernel. For each odd iteration, the odd indecies will be compared with the element to its right. For each even iteration, the even indecies will be compared with the element to its right. After the kernel is done computing, the sorted array will be copied from the device back to the host. The runtime of CUDA odd-even sort is $O(\frac{n^2}{p})$.
+3. Odd-Even Sort (MPI): Odd-Even sort in MPI starts with each ranking locally sorting its data using a built-in sort of choice. P iterations of the sort are then run. For each odd iteration, odd ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the highest 3 numbers while the odd rank will retain the lowest 3 numbers with both sets remaining in ascending order. For each even iteration, even ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the lowest 3 numbers while the odd rank will retain the highest 3 numbers with both sets remaining in ascending order. Finally, after all iterations are complete, each processes data will be gathered to a single sorted array using MPI_Gather. The runtime of MPI odd-even sort is $O(\frac{n^2}{p})$.
+4. Merge Sort (Sequential): Merge sort works by breaking an array into smaller and smaller subarrays until they are only of size one. Once that is complete, the subarrays "merge" with their neighbors and are combined back together, only now we do comparisons to see which should come first. We do this comparison between the two sorted subarrays' elements of the subarray until we complete our merge steps and we are left with a sorted array. The runtime is $O(nlogn)$
+5. Merge Sort (CUDA): Parallelizing merge sort with CUDA is done in a similar way to the sequential version of the sort, only we are giving each thread its only local block of the initial data as a small subarray. We then on separate threads call a sequential merge and then once the threads all finish the same depth of merge, we start the merge process again on the next level up in parallel. This process is repeated until we reach our full sorted array. The runtime is $O(\frac{nlogn}{p})$.
+6. Merge Sort (MPI): Parallelizing merge sort with MPI is done in a similar way to the sequential version of the sort, only we are giving each thread its only local smaller version of the initial data as a small subarray. We have our master process scatter work between the rest of the processes which then all commit to their own serial merge. After this is complete, all of the threads return their sorted arrays and the master process commits to merging those together until we have our final sorted array. The runtime is $O(\frac{nlogn}{p})$.
+7. Selection Sort (Sequential): Selection Sort (Sequential):Each iteration starts at a new index from the left going through the array. Each iteration finds the minimum element of the array from that point on, and swaps it into that starting index. This algorithm will always stop after N iterations. The runtime is $O(n^2)$.
+8. Selection Sort (CUDA):Selection Sort (CUDA): Each iteration is the same, starting at a new index from the left going through the array. Each iteration finds the minimum element in parallel, with each cuda thread comparing its element to a shared minimum address. Once the minimum is found, the address of it is found, and then swapped with the starting index. The runtime of the CUDA selection sort is $O(\frac{n^2}{p})$.
+9. Selection Sort (MPI): Selection Sort (MPI): The MPI implementation of selection sort splits the array into P parts, performing a sequential selection sort on each as described above. Then, gathering the array, pairs of the sorted lists are merged into larger sorted lists in parallel akin the the parallel merge sort. The runtime of this MPI selection sort is $O(\frac{n^3}{p^2})$.
+10. Quick Sort (Sequential): QuickSort is the sorting algorithm based on the divide-and-conquer method. Where the array is divided by a selected value in the array called the pivot. All the values left of the pivot is smaller than the pivot and all the values to the right of the pivot are larger than the pivot. Then the sorting algorithm will recursively sort the elements of the two arrays by picking another pivot in the arrays and having two more arrays with the left values being smaller than pivot and so on and so forth until all the elements are sorted. Once the elements are sorted, then the algorithm will merge the smaller arrays into one arrays that is fully sorted. The runtime of quicksort is $O(nlogn)$ time because dividing the array to smaller arrays takes n of time and merging the arrays takes logn time.
+11. Quick Sort (CUDA): Quicksort implemtation in CUDA is done by first copying the array from the host to the device. Then, the array is sorted in the CUDA kernal N times. Then the quicksort algorithm will sort the elements by using a pivot and recursively sort the left and right array, and then will merge the arrays. After the array is sorted by the kernal, the sorted array will be copied from the device back to the host. The runtime for quicksort in CUDA is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
+12. Quick Sort (MPI): The implemtation of quicksort in MPI is by first dividing the array in chunk sizes. All the process get the size of the array from MPI_Bcast which the root process broadcasts to the other processors. Then using MPI_Scatter to scatter the chunk size information to all the procesors. Then the processors will calculate their own chunk size and then sort the chunks with quicksort. Then once the processor does quicksort it sends their chunk to another processor based on a tree-based reduction pattern. Then a processor will recieve a chunk from another processor using MPI_Recv and then the chunk will be merged together. This will continue until all the chunks are merged together. The runtime for quicksort in MPI is $O(\frac{nlogn}{p})$ as it's just the sequential runtime of quicksort divide by the number of processors being used.
 
 ## 4. Performance evaluation
-
 Include detailed analysis of computation performance, communication performance. 
 Include figures and explanation of your analysis.
 
@@ -522,7 +401,6 @@ num_procs, num_threads:
 This should result in 4x7x10=280 Caliper files for your MPI experiments.
 
 ### 4b. Hints for performance analysis
-
 To automate running a set of experiments, parameterize your program.
 
 - inputType: If you are sorting, "Sorted" could generate a sorted input to pass into your algorithms
