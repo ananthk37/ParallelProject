@@ -388,6 +388,9 @@ Note: "nearly" is substituted for "1%pertubed", this change is in name only.
 
 ### Bubble Sort
 #### Strong Scaling
+![Bubble CUDA Strong Scaling](Graphs/bubble_cuda_strong.png)
+![Bubble MPI Strong Scaling](Graphs/bubble_mpi_strong.png)
+Both of these graphs were generated using an input size of $2^{20}$. Speedup increases for both the CUDA and MPI implementations as the number of threads/processes increases showing that this has good strong scaling. The on exception to this trend is that speedup decreases once the number of processess reaches 1024 in the MPI implementation.
 
 #### Weak Scaling
 ![Bubble CUDA Weak Scaling](Graphs/bubble_cuda_weak_comm.png)
@@ -402,6 +405,9 @@ This is an example of poor weak scaling since the time increases as the number o
 Both of these graphs were generated using an input size of $2^{20}$. Computation time is not affected by the input type for the CUDA runs, however random         input sees a significant increase in runtime for MPI.
 
 #### Communication vs Computation
+![Bubble CUDA Percentage](Graphs/bubble_cuda_per.png)
+![Bubble MPI Percentage](Graphs/bubble_mpi_per.png)
+Both of these graphs were generated using an input size of $2^{20}$. For the CUDA implementation, the communication and computation take up roughly the same percentage of the total time no matter the number of threads. For the MPI, implementation, the computation time takes up a lower percentage of the total time as the number of processes increases. The communication time for slighly increases from 2 to 64 processes before spiking up to over 60% at 128 processes.
 
 ### Merge Sort
 #### Strong Scaling
