@@ -4,7 +4,7 @@
 Group #3
 
 ## 1. Group members:
-We will communicate using discord during the duration of the project.
+We will communicate using Discord during the duration of the project.
 1. Robbie Clark
 2. Eric Lee
 3. Rushil Aggarwal
@@ -34,7 +34,7 @@ Parallel Sorting Algorithms
 ### 2b. Pseudocode for each parallel algorithm
 - For MPI programs, include MPI calls you will use to coordinate between processes
 - For CUDA programs, indicate which computation will be performed in a CUDA kernel,
-  and where you will transfer data to/from GPU
+  and where you will transfer data to/from the GPU
 
 1. Bubble Sort (Sequential)
     ```python
@@ -369,9 +369,9 @@ turn in a Caliper file for each.
 
 ### Algorithm Descriptions
 1. Bubble Sort (Sequential): Each iteration of a bubble sort starts at the beginning of the array, comparing adjacent indices until it reaches the end of the array, swapping elements when necessary. The range of indices that will be compared for any given iteration is 0 to N-iterations-1. The algorithm will stop after N-1 iterations or if no swaps occur during a given iteration, indicating the array is already sorted. The runtime of sequential bubble sort is $O(n^2)$.
-2. Odd-Even Sort (CUDA): Odd-Even sort is a parallel implementation of bubble sort. When implemented on CUDA, the algorithm starts with copying the starting array from the host to the device. Next, N iterations of the sort are run in the CUDA kernel. For each odd iteration, the odd indices will be compared with the element to its right. For each even iteration, the even indices will be compared with the element to its right. After the kernel is done computing, the sorted array will be copied from the device back to the host. The runtime of CUDA odd-even sort is $O(\frac{n^2}{p})$.
+2. Odd-Even Sort (CUDA): Odd-Even sort is a parallel implementation of bubble sort. When implemented on CUDA, the algorithm starts by copying the starting array from the host to the device. Next, N iterations of the sort are run in the CUDA kernel. For each odd iteration, the odd indices will be compared with the element to its right. For each even iteration, the even indices will be compared with the element to its right. After the kernel is done computing, the sorted array will be copied from the device back to the host. The runtime of CUDA odd-even sort is $O(\frac{n^2}{p})$.
 3. Odd-Even Sort (MPI): Odd-Even sort in MPI starts with each ranking locally sorting its data using a built-in sort of choice. P iterations of the sort are then run. For each odd iteration, odd ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the highest 3 numbers while the odd rank will retain the lowest 3 numbers with both sets remaining in ascending order. For each even iteration, even ranks will use MPI_Sendrecv to swap data with the rank 1 above them. The even rank will retain the lowest 3 numbers while the odd rank will retain the highest 3 numbers with both sets remaining in ascending order. Finally, after all iterations are complete, each process's data will be gathered into a single sorted array using MPI_Gather. The runtime of MPI odd-even sort is $O(\frac{n^2}{p})$.
-4. Merge Sort (Sequential): Merge sort works by breaking an array into smaller and smaller subarrays until they are only of size one. Once that is complete, the subarrays "merge" with their neighbors and are combined back together, only now we do comparisons to see which should come first. We do this comparison between the two sorted subarrays' elements of the subarray until we complete our merge steps and we are left with a sorted array. The runtime is $O(nlogn)$
+4. Merge Sort (Sequential): Merge sort works by breaking an array into smaller and smaller subarrays until they are only of size one. Once that is complete, the subarrays "merge" with their neighbors and are combined back together, only now do we do comparisons to see which should come first. We do this comparison between the two sorted subarrays' elements of the subarray until we complete our merge steps and we are left with a sorted array. The runtime is $O(nlogn)$
 5. Merge Sort (CUDA): Parallelizing merge sort with CUDA is done in a similar way to the sequential version of the sort, only we are giving each thread its only local block of the initial data as a small subarray. We then on separate threads call a sequential merge and then once the threads all finish the same depth of merge, we start the merge process again on the next level up in parallel. This process is repeated until we reach our full sorted array. The runtime is $O(\frac{nlogn}{p})$.
 6. Merge Sort (MPI): Parallelizing merge sort with MPI is done in a similar way to the sequential version of the sort, only we are giving each thread its only local smaller version of the initial data as a small subarray. We have our master process scatter work between the rest of the processes which then all commit to their own serial merge. After this is complete, all of the threads return their sorted arrays and the master process commits to merging those together until we have our final sorted array. The runtime is $O(\frac{nlogn}{p})$.
 7. Selection Sort (Sequential): Selection Sort (Sequential): Each iteration starts at a new index from the left and goes through the array. Each iteration finds the minimum element of the array from that point on and swaps it into that starting index. This algorithm will always stop after N iterations. The runtime is $O(n^2)$.
@@ -390,24 +390,28 @@ Note: "nearly" is substituted for "1%pertubed", this change is in name only.
 #### Strong Scaling
 ![Bubble CUDA Strong Scaling](Graphs/bubble_cuda_strong.png)
 ![Bubble MPI Strong Scaling](Graphs/bubble_mpi_strong.png)
-Both of these graphs were generated using an input size of $2^{20}$. Speedup increases for both the CUDA and MPI implementations as the number of threads/processes increases showing that this has good strong scaling. The on exception to this trend is that speedup decreases once the number of processess reaches 1024 in the MPI implementation.
+<br>
+Both of these graphs were generated using an input size of $2^{20}$. Speedup increases for both the CUDA and MPI implementations as the number of threads/processes increases showing that this has good strong scaling. The one exception to this trend is that speedup decreases once the number of processes reaches 1024 in the MPI implementation.
 
 #### Weak Scaling
 ![Bubble CUDA Weak Scaling](Graphs/bubble_cuda_weak_comm.png)
 ![Bubble CUDA Weak Scaling](Graphs/bubble_cuda_weak_comm.png)
 ![Bubble MPI Weak Scaling](Graphs/bubble_mpi_weak_comm.png)
 ![Bubble MPI Weak Scaling](Graphs/bubble_mpi_weak_comm.png)
-This is an example of poor weak scaling since the time increases as the number of threads/processes increase. If the algorithm had good weak scaling, the lines would be relatively flat.
+<br>
+This is an example of poor weak scaling since the time increases as the number of threads/processes increases. If the algorithm had good weak scaling, the lines would be relatively flat.
 
 #### Input Types
 ![Bubble CUDA Input Types](Graphs/bubble_cuda_inputs.png)
 ![Bubble MPI Input Types](Graphs/bubble_mpi_inputs.png)
+<br>
 Both of these graphs were generated using an input size of $2^{20}$. Computation time is not affected by the input type for the CUDA runs, however random         input sees a significant increase in runtime for MPI.
 
 #### Communication vs Computation
 ![Bubble CUDA Percentage](Graphs/bubble_cuda_per.png)
 ![Bubble MPI Percentage](Graphs/bubble_mpi_per.png)
-Both of these graphs were generated using an input size of $2^{20}$. For the CUDA implementation, the communication and computation take up roughly the same percentage of the total time no matter the number of threads. For the MPI, implementation, the computation time takes up a lower percentage of the total time as the number of processes increases. The communication time for slighly increases from 2 to 64 processes before spiking up to over 60% at 128 processes.
+<br>
+Both of these graphs were generated using an input size of $2^{20}$. For the CUDA implementation, the communication and computation take up roughly the same percentage of the total time no matter the number of threads. For the MPI, implementation, the computation time takes up a lower percentage of the total time as the number of processes increases. The communication time slightly increases from 2 to 64 processes before spiking up to over 60% at 128 processes.
 
 ### Merge Sort
 #### Strong Scaling
@@ -436,13 +440,13 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 
 #### Communication vs Computation
 
-### Algorithm Comparions
+### Algorithm Comparisons
 
 ## 5. Presentation
 
 ## 6. Final Report
 Submit a zip named `TeamX.zip` where `X` is your team number. The zip should contain the following files:
 - Algorithms: Directory of source code of your algorithms.
-- Data: All `.cali` files used to generate the plots seperated by algorithm/implementation.
+- Data: All `.cali` files used to generate the plots separated by algorithm/implementation.
 - Jupyter notebook: The Jupyter notebook(s) used to generate the plots for the report.
 - Report.md
