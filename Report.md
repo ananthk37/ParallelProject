@@ -384,49 +384,45 @@ turn in a Caliper file for each.
 ## 4. Performance evaluation
 Include detailed analysis of computation performance, communication performance. 
 Include figures and explanation of your analysis.
+Note: "nearly" is substituted for "1%pertubed", this change is in name only.
 
-### 4a. Vary the following parameters
-For inputSizes:
-- 2^16, 2^18, 2^20, 2^22, 2^24, 2^26, 2^28
+### Bubble Sort
+#### Strong Scaling
 
-For inputTypes:
-- Sorted, Random, Reverse sorted, 1%perturbed
+#### Weak Scaling
 
-num_procs, num_threads:
-- MPI: num_procs:
-    - 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024
-- CUDA: num_threads:
-    - 64, 128, 256, 512, 1024, 2048, 4096
+#### Input Types
 
-This should result in 4x7x10=280 Caliper files for your MPI experiments.
+#### Communication vs Computation
 
-### 4b. Hints for performance analysis
-To automate running a set of experiments, parameterize your program.
+### Merge Sort
+#### Strong Scaling
 
-- inputType: If you are sorting, "Sorted" could generate a sorted input to pass into your algorithms
-- algorithm: You can have a switch statement that calls the different algorithms and sets the Adiak variables accordingly
-- num_procs:   How many MPI ranks you are using
-- num_threads: Number of CUDA or OpenMP threads
+#### Weak Scaling
 
-When your program works with these parameters, you can write a shell script 
-that will run a for loop over the parameters above (e.g., on 64 processors, 
-perform runs that invoke algorithm2 for Sorted, ReverseSorted, and Random data).  
+#### Input Types
 
-### 4c. You should measure the following performance metrics
-- `Time`
-    - Min time/rank
-    - Max time/rank
-    - Avg time/rank
-    - Total time
-    - Variance time/rank
-    - `If GPU`:
-        - Avg GPU time/rank
-        - Min GPU time/rank
-        - Max GPU time/rank
-        - Total GPU time
+#### Communication vs Computation
 
-`Intel top-down`: For your CPU-only experiments on the scale of a single node, you should
-generate additional performance data, measuring the hardware counters on the CPU. This can be done by adding `topdown.all` to the `spot()` options in the `CALI_CONFIG` in your jobfile.
+### Selection Sort
+#### Strong Scaling
+
+#### Weak Scaling
+
+#### Input Types
+
+#### Communication vs Computation
+
+### Quick Sort
+#### Strong Scaling
+
+#### Weak Scaling
+
+#### Input Types
+
+#### Communication vs Computation
+
+### Algorithm Comparions
 
 ## 5. Presentation
 
