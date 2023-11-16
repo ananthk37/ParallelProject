@@ -392,7 +392,9 @@ Note: "nearly" is substituted for "1%pertubed", this change is in name only.
 #### Weak Scaling
 
 #### Input Types
-
+![Alt text](bubble_cuda_inputs.png)
+![Alt text](bubble_mpi_inputs.png)
+Both of these graphs were generated using an input size of $2^{20}$. Computation time is not affected by the input type for the cuda runs, however random input sees a significant increase in runtime for MPI.
 #### Communication vs Computation
 
 ### Merge Sort
