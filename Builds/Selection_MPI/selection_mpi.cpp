@@ -26,7 +26,6 @@ const char* comp_small = "comp_small";
 const char* comm = "comm";
 const char* comm_large = "comm_large";
 const char* comm_small = "comm_small";
-const char* data_init_MPI_GATHER = "data_init_MPI_GATHER";
 const char* bcast = "MPI_Bcast";
 const char* gather = "MPI_Gather";
 const char* reduce = "MPI_Reduce";
@@ -145,9 +144,9 @@ void fill_array(int* nums, int size, const char* input_type) {
 
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(data_init_MPI_GATHER);
+    CALI_MARK_BEGIN(gather);
     MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(data_init_MPI_GATHER);
+    CALI_MARK_END(gather);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
     free(local_nums);
