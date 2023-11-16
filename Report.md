@@ -445,6 +445,9 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 #### Communication vs Computation
 ![Quick CUDA Percentage](Graphs/Quick_cuda_p.png)
 ![Quick MPI Percentage](Graphs/Quick_mpi_p.png)
+<br>
+As seen in the graphs the comp time decreases as the number of threads increase for both cuda and mpi but the mpi is alot more efficent 
+then my cuda and the reason why this could be is because of my implementation of cuda and mpi being different and my cuda not being that efficent compared to my mpi. Also for both mpi and cuda the comm time % increases at the threads going up becuase comm time doesn't decrease from parallelism so the percentage of comm time will increase if comp time decreases.
 
 ### Algorithm Comparisons
 
