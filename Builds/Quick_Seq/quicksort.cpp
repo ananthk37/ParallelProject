@@ -16,58 +16,61 @@ const char* comp_large = "comp_large";
 const char* comm = "comm";
 const char* correctness_check = "correctness_check";
 
-void random_fill(int* nums, int n) {
+void random_fill(float* nums, int n) {
     for(int i = 0; i < n; i++) {
         nums[i] = rand() % n;
     }
 }
 
-void sorted_fill(int* nums, int n) {
+void sorted_fill(float* nums, int n) {
     for(int i = 0; i < n; i++) {
         nums[i] = i;
     }
 }
 
-void reverse_fill(int* nums, int n) {
+void reverse_fill(float* nums, int n) {
     for(int i = 0; i < n; i++) {
         nums[i] = n - i - 1;
     }
 }
 
-void nearly_fill(int* nums, int n) {
-
-}
-
-int partition(int* nums, int low, int high){
-    int pivot = nums[high];
-
-    int i = (low - 1);
-    
-    for(int j = low; j < high; j++){
-        if(nums[j] < pivot){
-            i++;
-            swap(nums[i], nums[j]);
-        }
+void nearly_fill(float* nums, int n) {
+    for(int i = 0; i < n; i++) {
+        nums[i] = (rand() % n) / (n - i);
     }
-
-    swap(nums[i + 1], nums[high]);
-
-    return i + 1;
 }
 
-void quick_sort(int* nums, int low, int high) {
-   if(low < high){
-     int pi = partition(nums, low, high);
-
-     quick_sort(nums, low, pi - 1);
-     quick_sort(nums, pi + 1, high);
-   }
-}
-
-bool confirm_sorted(int* nums, int n) {
-    for(int i = 0; i < n - 1; i++){
-        cout << nums[i] << endl;
+int partition(float* nums, int low,int high)
+{
+   
+  int pivot=nums[high];
+  int i=(low-1);
+   
+  for(int j=low;j<=high;j++)
+  {
+    if(nums[j]<pivot)
+    {
+      i++;
+      swap(nums[i],nums[j]);
     }
+  }
+  swap(nums[i+1],nums[high]);
+  return (i+1);
+}
+ 
+            
+void quickSort(float* nums,int low,int high)
+{
+  if(low<high)
+  {     
+    int pi=partition(nums,low,high);
+     
+    quickSort(nums,low,pi-1);
+    quickSort(nums,pi+1,high);
+  }
+}
+
+bool confirm_sorted(float* nums, int n) {
     for(int i = 0; i < n - 1; i++) {
         if(nums[i] > nums[i + 1]) {
             cout << "Correctness Check Failed..." << endl;
@@ -86,21 +89,21 @@ int main (int argc, char *argv[]) {
     // retrieve user input
     const char* input_type = argv[1];
     int size = atoi(argv[2]);
-    int* nums = new int [size];
+    float* nums = new float [size];
 
     // initialize data in array
     CALI_MARK_BEGIN(data_init);
-    if(input_type == "random") {
+    if(strcmp(input_type, "random") == 0) {
         random_fill(nums, size);
     }
-    if(input_type == "sorted") {
+    if(strcmp(input_type, "sorted") == 0) {
         sorted_fill(nums, size);
     }
-    if(input_type == "reverse") {
+    if(strcmp(input_type, "reverse") == 0) {
         reverse_fill(nums, size);
     }
-    if(input_type == "nearly") {
-        cout << "Need to implement" << endl;
+    if(strcmp(input_type, "nearly") == 0) {
+        nearly_fill(nums, size);
     }
     CALI_MARK_END(data_init);
     cout << "Data Initialized" << endl;
@@ -108,10 +111,10 @@ int main (int argc, char *argv[]) {
     // perform sort
     CALI_MARK_BEGIN(comp);
     CALI_MARK_BEGIN(comp_large);
-    quick_sort(nums, 0, size - 1);
+    quickSort(nums, 0, size - 1);
     CALI_MARK_END(comp_large);
     CALI_MARK_END(comp);
-    cout << "Quick Sort Completed" << endl;
+    cout << "selection Sort Completed" << endl;
 
     // check for correctedness
     CALI_MARK_BEGIN(correctness_check);
@@ -124,17 +127,17 @@ int main (int argc, char *argv[]) {
     adiak::libraries();     // Libraries used
     adiak::cmdline();       // Command line used to launch the job
     adiak::clustername();   // Name of the cluster
-    adiak::value("Algorithm", "QuickSort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
+    adiak::value("Algorithm", "Quick Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
     adiak::value("ProgrammingModel", "Sequential"); // e.g., "MPI", "CUDA", "MPIwithCUDA"
-    adiak::value("Datatype", "int"); // The datatype of input elements (e.g., double, int, float)
-    adiak::value("SizeOfDatatype", sizeof(int)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
+    adiak::value("Datatype", "float"); // The datatype of input elements (e.g., double, int, float)
+    adiak::value("SizeOfDatatype", sizeof(float)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
     adiak::value("InputSize", size); // The number of elements in input dataset (1000)
     adiak::value("InputType", input_type); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
     adiak::value("group_num", 3); // The number of your group (integer, e.g., 1, 10)
     adiak::value("implementation_source", "Online"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").
 
-
-    delete[] nums;
     mgr.stop();
     mgr.flush();
+
+    delete[] nums;
 }
