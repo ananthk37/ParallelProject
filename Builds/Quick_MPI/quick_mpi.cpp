@@ -275,11 +275,8 @@ int main (int argc, char *argv[]) {
 
     CALI_MARK_BEGIN(correctness_check);
     int sorted = 1;
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
     int local_sorted = confirm_sorted(nums, size);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
+    CALI_MARK_END(correctness_check);
 
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_small);
@@ -288,7 +285,6 @@ int main (int argc, char *argv[]) {
     CALI_MARK_END(reduce);
     CALI_MARK_END(comm_small);
     CALI_MARK_END(comm);
-    CALI_MARK_END(correctness_check);
 
     if(proc_id == 0) {
         // cout << "MASTER RANK" << endl;
