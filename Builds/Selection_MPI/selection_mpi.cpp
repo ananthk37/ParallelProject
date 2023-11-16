@@ -53,7 +53,7 @@ void reverse_fill(int* local_nums, int size) {
     }
 }
 
-void nearly_fill(float* local_nums, int size) {
+void nearly_fill(int* local_nums, int size) {
     sorted_fill(local_nums);
     for(int i = 0; i < local_size; i++) {
         if(rand() % 100 == 0) {
