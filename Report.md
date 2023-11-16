@@ -424,12 +424,27 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 
 ### Selection Sort
 #### Strong Scaling
+![Selection CUDA Strong Scaling](Graphs/selection_cuda_strong.png)
+<br>
+The Strong scaling here is very random, and varies up and down for speedup with different numbers of CUDA threads. This may be due to the inefficiency of using CUDA GPU for selection sort, since the whole array is traversed. This will be tried with a larger array size as well to test if speedup is more evident.
 
 #### Weak Scaling
+![Sequential CUDA Weak Scaling](Graphs/selection_cuda_weak_comm.png)
+![Sequential CUDA Weak Scaling](Graphs/selection_cuda_weak_comm.png)
+![Sequential MPI Weak Scaling](Graphs/selection_mpi_weak_comm.png)
+![Sequential MPI Weak Scaling](Graphs/selection_mpi_weak_comm.png)
+<br>
+The weak-scaling looks decent for MPI, and bad for CUDA, but bad for both with super large process sizes. This may be due to the exponential nature of the sort with selection sort, or the inefficient caching with CUDA GPUs.
 
 #### Input Types
+![Selection CUDA Input Types](Graphs/selection_cuda_inputs.png)
+<br>
+This looks very random for input types, but varies only a little. Selection sort is unlikely to change given the input, so this is as expected.
 
 #### Communication vs Computation
+![Selection CUDA Percentage](Graphs/selection_cuda_per.png)
+<br>
+The communication and computation time varies only a little bit. Since the amount of communication doesn't change much with more processors for GPU usage, it is unlikely to change the relationship between communication and computation much. This might be worth looking at for larger problem sizes however.
 
 ### Quick Sort
 #### Strong Scaling
