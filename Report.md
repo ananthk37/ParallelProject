@@ -390,14 +390,17 @@ Note: "nearly" is substituted for "1%pertubed", this change is in name only.
 #### Strong Scaling
 
 #### Weak Scaling
+![Bubble CUDA Weak Scaling](Graphs/bubble_cuda_weak_comm.png)
+![Bubble CUDA Weak Scaling](Graphs/bubble_cuda_weak_comm.png)
+![Bubble MPI Weak Scaling](Graphs/bubble_mpi_weak_comm.png)
+![Bubble MPI Weak Scaling](Graphs/bubble_mpi_weak_comm.png)
+This is an example of poor weak scaling since the time increases as the number of threads/processes increase. If the algorithm had good weak scaling, the lines would be relatively flat.
 
 #### Input Types
-<p>
-    <img src="Graphs/bubble_cuda_inputs.png" width="220" height="240" />
-    <img src="Graphs/bubble_mpi_inputs.png" width="220" height="240" />
-    <br>
-    Both of these graphs were generated using an input size of $2^{20}$. Computation time is not affected by the input type for the CUDA runs, however random         input sees a significant increase in runtime for MPI.
-</p>
+![Bubble CUDA Input Types](Graphs/bubble_cuda_inputs.png)
+![Bubble MPI Input Types](Graphs/bubble_mpi_inputs.png)
+Both of these graphs were generated using an input size of $2^{20}$. Computation time is not affected by the input type for the CUDA runs, however random         input sees a significant increase in runtime for MPI.
+
 #### Communication vs Computation
 
 ### Merge Sort
