@@ -24,7 +24,7 @@ const char* comp_large = "comp_large";
 const char* comm = "comm";
 const char* comm_large = "comm_large";
 const char* comm_small = "comm_small";
-const char* data_init_MPI_GATHER = "data_init_MPI_GATHER";
+const char* gather = "MPI_Gather";
 const char* bcast = "MPI_Bcast";
 const char* reduce = "MPI_Reduce";
 const char* scatter = "MPI_Scatter";
@@ -145,23 +145,22 @@ void fill_array(int* nums, int size, const char* input_type) {
 
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(data_init_MPI_GATHER);
+    CALI_MARK_BEGIN(gather);
     MPI_Gather(local_nums, local_size, MPI_FLOAT, nums, local_size, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    CALI_MARK_END(data_init_MPI_GATHER);
+    CALI_MARK_END(gather);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
     free(local_nums);
 }
 
 int confirm_sorted(int* nums, int size) {
-    CALI_MARK_BEGIN(correctness_check);
-    for(int i = 0; i < size - 1; i++) {
-        if(nums[i] > nums[i + 1]) {
+    for(int i = 0; i < local_size - 1; i++) {
+        int index = i + offset;
+        if(nums[index] > nums[index + 1]) {
             return 0;
         }
     }
     return 1;
-    CALI_MARK_END(correctness_check);
 }
 
 int main (int argc, char *argv[]) {
@@ -185,15 +184,14 @@ int main (int argc, char *argv[]) {
     fill_array(nums, size, input_type);
 
     // test print
-    if(proc_id == 0) {
-        cout << "MASTER RANK" << endl;
-        for(int i = 0; i < size; i++) {
-            cout << nums[i] << " ";
-        }
-        cout << endl;
-    }
+    // if(proc_id == 0) {
+    //     cout << "MASTER RANK" << endl;
+    //     for(int i = 0; i < size; i++) {
+    //         cout << nums[i] << " ";
+    //     }
+    //     cout << endl;
+    // }
 
-    time_taken -= MPI_Wtime();
 
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
@@ -220,11 +218,11 @@ int main (int argc, char *argv[]) {
 
     int own_chunk_size = (size >= chunk_size * (proc_id + 1)) ? chunk_size : (size - chunk_size * proc_id);
  
-    CALI_MARK_BEGIN(comm);
-    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
     quicksort(chunk, 0, own_chunk_size);
-    CALI_MARK_END(comm_large);
-    CALI_MARK_END(comm);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
 
      for (int step = 1; step < num_procs; step = 2 * step) {
         if (proc_id % (2 * step) != 0) {
@@ -250,11 +248,11 @@ int main (int argc, char *argv[]) {
             CALI_MARK_END(comm_small);
             CALI_MARK_END(comm);
 
-            CALI_MARK_BEGIN(comm);
-            CALI_MARK_BEGIN(comm_large);
+            CALI_MARK_BEGIN(comp);
+            CALI_MARK_BEGIN(comp_large);
             nums = merge(chunk, own_chunk_size, chunk_received, received_chunk_size);
-            CALI_MARK_END(comm_large);
-            CALI_MARK_END(comm);
+            CALI_MARK_END(comp_large);
+            CALI_MARK_END(comp);
 
             free(chunk);
             free(chunk_received);
@@ -262,21 +260,47 @@ int main (int argc, char *argv[]) {
             own_chunk_size = own_chunk_size + received_chunk_size;
         }
     }
- 
-    time_taken += MPI_Wtime();
 
+    if(proc_id != 0) {
+        nums = (int*)malloc(size * sizeof(int));
+    }
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
+    CALI_MARK_BEGIN(bcast);
+    MPI_Bcast(nums, size, MPI_INT, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(bcast);
+    CALI_MARK_END(comm_large);
+    CALI_MARK_END(comm);
+
+    CALI_MARK_BEGIN(correctness_check);
+    int sorted = 1;
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    int local_sorted = confirm_sorted(nums, size);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp);
+
+    CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_small);
+    CALI_MARK_BEGIN(reduce);
+    MPI_Reduce(&local_sorted, &sorted, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
+    CALI_MARK_END(reduce);
+    CALI_MARK_END(comm_small);
+    CALI_MARK_END(comm);
+    CALI_MARK_END(correctness_check);
 
     if(proc_id == 0) {
-        cout << "MASTER RANK" << endl;
+        // cout << "MASTER RANK" << endl;
         
-        for(int i = 0; i < size; i++) {
-            cout << nums[i] << " ";
-        }
-        cout << endl;
+        // for(int i = 0; i < size; i++) {
+        //     cout << nums[i] << " ";
+        // }
+        // cout << endl;
 
-        int local_sorted = confirm_sorted(nums, size);
+        //int local_sorted = confirm_sorted(nums, size);
 
-        if(local_sorted == 1) {
+        if(sorted == 1) {
             cout << "Correctness Check Passed!" << endl;
         }
         else {

@@ -23,6 +23,7 @@ const char* data_gen_d2h = "data_gen_d2h";
 const char* comp = "comp";
 const char* comp_large = "comp_large";
 const char* comm = "comm";
+const char* comm_large = "comm_large";
 const char* comp_h2d = "comp_h2d";
 const char* comp_d2h = "comp_d2h";
 const char* correctness_check = "correctness_check";
@@ -66,9 +67,11 @@ void fill_array(int* nums, const char* input_type) {
 
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(data_gen_h2d);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
     CALI_MARK_END(data_gen_h2d);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     dim3 blocks(BLOCKS, 1);
@@ -92,57 +95,61 @@ void fill_array(int* nums, const char* input_type) {
 
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(data_gen_d2h);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
     CALI_MARK_END(data_gen_d2h);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
     
     cudaFree(dev_nums);
 }
 
-__device__ int partition(int* dev_nums, int low, int high) {
-    int pivot = dev_nums[high];
-    int i = (low - 1);
-  
-    for (int j = low; j <= high - 1; j++) {
-        if (dev_nums[j] < pivot) {
-            i++;
-            int temp = dev_nums[i];
-            dev_nums[i] = dev_nums[j];
-            dev_nums[j] = temp;
-        }
-    }
-  
-    int temp = dev_nums[i + 1];
-    dev_nums[i + 1] = dev_nums[high];
-    dev_nums[high] = temp;
-  
-    return (i + 1);
-}
+__global__ void quick_sort_step(int* dev_nums, int n) {
+    #define MAX_LEVELS	300
 
-__global__ void quick_sort_step(int* dev_nums, int left, int right) {
-    int stack[64];
-    int top = -1;
-  
-    stack[++top] = left;
-    stack[++top] = right;
-  
-    while (top >= 0) {
-        right = stack[top--];
-        left = stack[top--];
-  
-        int pivotIndex = partition(dev_nums, left, right);
-  
-        if (pivotIndex - 1 > left) {
-            stack[++top] = left;
-            stack[++top] = pivotIndex - 1;
+	int pivot, L, R;
+	int idx =  threadIdx.x + blockIdx.x * blockDim.x;
+	int start[MAX_LEVELS];
+	int end[MAX_LEVELS];
+
+	start[idx] = idx;
+	end[idx] = n - 1;
+	while (idx >= 0) {
+		L = start[idx];
+		R = end[idx];
+		if (L < R) {
+			pivot = dev_nums[L];
+			while (L < R) {
+				while (dev_nums[R] >= pivot && L < R)
+					R--;
+				if(L < R)
+					dev_nums[L++] = dev_nums[R];
+				while (dev_nums[L] < pivot && L < R)
+					L++;
+				if (L < R)
+					dev_nums[R--] = dev_nums[L];
+			}
+			dev_nums[L] = pivot;
+			start[idx + 1] = L + 1;
+			end[idx + 1] = end[idx];
+			end[idx++] = L;
+			if (end[idx] - start[idx] > end[idx - 1] - start[idx - 1]) {
+                // swap start[idx] and start[idx-1]
+                int tmp = start[idx];
+                start[idx] = start[idx - 1];
+                start[idx - 1] = tmp;
+
+                // swap end[idx] and end[idx-1]
+                tmp = end[idx];
+                end[idx] = end[idx - 1];
+                end[idx - 1] = tmp;
+            }
+		}
+		else{
+			idx--;
         }
-  
-        if (pivotIndex + 1 < right) {
-            stack[++top] = pivotIndex + 1;
-            stack[++top] = right;
-        }
-    }
+	}
 }
 
 void quick_sort(int* nums) {
@@ -154,9 +161,11 @@ void quick_sort(int* nums) {
 
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(comp_h2d);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
     CALI_MARK_END(comp_h2d);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     dim3 blocks(BLOCKS, 1);
@@ -165,21 +174,24 @@ void quick_sort(int* nums) {
     //QUICKSORT
     CALI_MARK_BEGIN(comp);
     CALI_MARK_BEGIN(comp_large);
-    for(int i = 0; i < NUM_VALS; i++){
-        quick_sort_step<<<blocks, threads>>>(dev_nums, 0, i);
+    for (int i = 0; i < NUM_VALS; ++i)
+    {
+        quick_sort_step<<<BLOCKS, THREADS>>>(dev_nums, NUM_VALS);
     }
     CALI_MARK_END(comp_large);
     CALI_MARK_END(comp);
 
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(comp_d2h);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
     CALI_MARK_END(comp_d2h);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 }
 
-__global__ void confirm_sorted_step(float* nums, int size, bool* sorted) {
+__global__ void confirm_sorted_step(int* nums, int size, bool* sorted) {
     int index = threadIdx.x + blockDim.x * blockIdx.x;
     if(index < size - 1) {
         if(nums[index] > nums[index + 1]) {
@@ -189,7 +201,7 @@ __global__ void confirm_sorted_step(float* nums, int size, bool* sorted) {
 }
 
 bool confirm_sorted(int* nums) {
-    float *dev_nums;
+    int *dev_nums;
     bool *dev_sorted;
     bool sorted = true;
     size_t size = NUM_VALS * sizeof(int);
@@ -199,10 +211,12 @@ bool confirm_sorted(int* nums) {
 
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(correctness_h2d);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
     cudaMemcpy(dev_sorted, &sorted, sizeof(bool), cudaMemcpyHostToDevice);
     CALI_MARK_END(correctness_h2d);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     dim3 blocks(BLOCKS, 1);
@@ -216,9 +230,11 @@ bool confirm_sorted(int* nums) {
 
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
+    CALI_MARK_BEGIN(comm_large);
     CALI_MARK_BEGIN(correctness_d2h);
     cudaMemcpy(&sorted, dev_sorted, sizeof(bool), cudaMemcpyDeviceToHost);
     CALI_MARK_END(correctness_d2h);
+    CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     cudaFree(dev_nums);
@@ -252,7 +268,7 @@ int main(int argc, char *argv[]) {
         std::cout << nums[i] << " ";  // Output or process each element in 'nums'
     }
 
-    cudaFree(dev_nums);
+    //cudaFree(dev_nums);
 
     // sort array
     quick_sort(nums);
@@ -292,4 +308,3 @@ int main(int argc, char *argv[]) {
 
     free(nums);
 }
-  
