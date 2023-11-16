@@ -433,12 +433,18 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 
 ### Quick Sort
 #### Strong Scaling
+![Quick CUDA Strong Scaling](Graphs/Quick_cuda_strong.png)
+![Quick MPI Strong Scaling](Graphs/Quick_mpi_strong.png)
+<br>
 
 #### Weak Scaling
 
 #### Input Types
+![Quick CUDA Input Types](Graphs/Quick_cuda_comptime.png)
 
 #### Communication vs Computation
+![Quick CUDA Percentage](Graphs/Quick_cuda_p.png)
+![Quick MPI Percentage](Graphs/Quick_mpi_p.png)
 
 ### Algorithm Comparisons
 
