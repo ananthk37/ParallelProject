@@ -415,8 +415,12 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 
 ### Merge Sort
 #### Strong Scaling
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/c48b2353-0dcc-4045-a6ca-57c3f429c567)
 
 #### Weak Scaling
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/f45f0979-5ad0-42e8-a6e5-0b68c40e94aa)
+
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/f4f74750-90b4-4455-8fa0-b788407e7811)
 
 #### Input Types
 
