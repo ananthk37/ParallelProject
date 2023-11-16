@@ -31,7 +31,7 @@ const char* correctness_h2d = "correctness_h2d";
 const char* correctness_d2h = "correctness_d2h";
 
 
-__global__ void random_fill(float* nums, int size, const char* input_type) {
+__global__ void random_fill(float* nums, int size) {
     int index = threadIdx.x + blockDim.x * blockIdx.x;
     curandState state;
     curand_init(1, index, 0, &state);
@@ -39,22 +39,26 @@ __global__ void random_fill(float* nums, int size, const char* input_type) {
     nums[index] = (float)curand_uniform(&state) * size;
 }
 
-__global__ void sorted_fill(float* nums, int size, const char* input_type) {
+__global__ void sorted_fill(float* nums) {
     int index = threadIdx.x + blockDim.x * blockIdx.x;
     nums[index] = (float)index;
 }
 
-__global__ void reverse_fill(float* nums, int size, const char* input_type) {
+__global__ void reverse_fill(float* nums, int size) {
     int index = threadIdx.x + blockDim.x * blockIdx.x;
     nums[index] = (float)(size - index - 1);
 }
 
-__global__ void nearly_fill(float* nums, int size, const char* input_type) {
+__global__ void nearly_fill(float* nums, int size) {
     int index = threadIdx.x + blockDim.x * blockIdx.x;
     curandState state;
     curand_init(1, index, 0, &state);
-
-    nums[index] = (float)curand_uniform(&state) * blockIdx.x;
+    if((int)truncf(curand_uniform(&state) * (100 - 1 + 0.999999) + 1) == 1) {
+        int swap_index = (int)truncf(curand_uniform(&state) * (size - 1 + 0.999999));
+        float temp = nums[index];
+        nums[index] = nums[swap_index];
+        nums[swap_index] = temp;
+    }
 }
 
 __global__ void bubble_sort_step(float* nums, int size, int oddeven) {
@@ -88,6 +92,13 @@ __global__ void confirm_sorted_step(float* nums, int size, bool* sorted) {
     }
 }
 
+void print_array(float* nums) {
+    for(int i = 0; i < NUM_VALS; i++) {
+        cout << nums[i] << " ";
+    }
+    cout << endl;
+}
+
 void fill_array(float* nums, const char* input_type) {
     float *dev_nums;
     size_t size = NUM_VALS * sizeof(float);
@@ -109,16 +120,17 @@ void fill_array(float* nums, const char* input_type) {
     // FILLING ARRAY
     CALI_MARK_BEGIN(data_init);
     if(strcmp(input_type, "random") == 0) {
-        random_fill<<<blocks, threads>>>(dev_nums, NUM_VALS, input_type);
+        random_fill<<<blocks, threads>>>(dev_nums, NUM_VALS);
     }
     if(strcmp(input_type, "sorted") == 0) {
-        sorted_fill<<<blocks, threads>>>(dev_nums, NUM_VALS, input_type);
+        sorted_fill<<<blocks, threads>>>(dev_nums);
     }
     if(strcmp(input_type, "reverse") == 0) {
-        reverse_fill<<<blocks, threads>>>(dev_nums, NUM_VALS, input_type);
+        reverse_fill<<<blocks, threads>>>(dev_nums, NUM_VALS);
     }
     if(strcmp(input_type, "nearly") == 0) {
-        nearly_fill<<<blocks, threads>>>(dev_nums, NUM_VALS, input_type);
+        sorted_fill<<<blocks, threads>>>(dev_nums);
+        nearly_fill<<<blocks, threads>>>(dev_nums, NUM_VALS);
     }
     CALI_MARK_END(data_init);
 
@@ -226,6 +238,7 @@ int main(int argc, char *argv[]) {
     NUM_VALS = atoi(argv[3]);
     BLOCKS = NUM_VALS / THREADS;
 
+    printf("Input Type: %s\n", input_type);
     printf("Number of threads: %d\n", THREADS);
     printf("Number of values: %d\n", NUM_VALS);
     printf("Number of blocks: %d\n\n", BLOCKS);
@@ -236,6 +249,7 @@ int main(int argc, char *argv[]) {
     // fill array
     fill_array(nums, input_type);
     cout << "Data Initialized" << endl;
+    // print_array(nums);
 
     // sort array
     bubble_sort(nums);
@@ -260,7 +274,7 @@ int main(int argc, char *argv[]) {
     adiak::value("SizeOfDatatype", sizeof(float)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
     adiak::value("InputSize", NUM_VALS); // The number of elements in input dataset (1000)
     adiak::value("InputType", input_type); // For sorting, this would be "Sorted", "ReverseSorted", "Random", "1%perturbed"
-    adiak::value("num_threads", NUM_VALS); // The number of CUDA or OpenMP threads
+    adiak::value("num_threads", THREADS); // The number of CUDA or OpenMP threads
     adiak::value("num_blocks", BLOCKS); // The number of CUDA blocks 
     adiak::value("group_num", 3); // The number of your group (integer, e.g., 1, 10)
     adiak::value("implementation_source", "AI"); // Where you got the source code of your algorithm; choices: ("Online", "AI", "Handwritten").

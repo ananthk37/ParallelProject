@@ -35,8 +35,11 @@ void reverse_fill(float* nums, int n) {
 }
 
 void nearly_fill(float* nums, int n) {
+    sorted_fill(nums, n);
     for(int i = 0; i < n; i++) {
-        nums[i] = (rand() % n) / (n - i);
+        if(rand() % 100 == 0) {
+            swap(nums[i], nums[rand() % n]);
+        }
     }
 }
 

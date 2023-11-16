@@ -4,6 +4,9 @@
 #include <cmath>
 #include <algorithm>
 #include <limits.h>
+#include <vector>
+#include <cstring>
+#include <iostream>
 
 #include <caliper/cali.h>
 #include <caliper/cali-manager.h>
@@ -29,10 +32,8 @@ const char *merge_and_partition = "merge_and_partition";
 const char *comm = "comm";
 const char *comm_small = "comm_small";
 const char *comm_large = "comm_large";
-const char *sendrecv = "MPI_Sendrecv";
-const char *bcast = "MPI_Bcast";
-const char *gather = "MPI_Gather";
-const char *reduce = "MPI_Reduce";
+const char *send = "MPI_Send";
+const char *recieve = "MPI_Recv";
 const char *correctness_check = "correctness_check";
 
 void random_fill(float *local_nums, int size)
@@ -93,16 +94,17 @@ void fill_array(float *local_nums, int size, const char *input_type)
 int confirm_sorted(float *nums, int size)
 {
     CALI_MARK_BEGIN(correctness_check);
-    for (int i = 0; i < local_size; i++)
+    for (int i = 0; i < size; i++)
     {
-        int index = i + offset;
+        int index = i;
+        //cout << nums[index] << endl;
         if (index < size - 1 && nums[index] > nums[index + 1])
         {
             return 0;
         }
     }
-    return 1;
     CALI_MARK_END(correctness_check);
+    return 1;
 }
 
 void merge(float *arr, int l, int m, int r)
@@ -161,13 +163,20 @@ void mergeSort(float *arr, int l, int r)
     if (l < r)
     {
         int m = l + (r - l) / 2;
+        CALI_MARK_END(local_sort);
+        CALI_MARK_END(comp_large);
+        CALI_MARK_END(comp);
         mergeSort(arr, l, m);
         mergeSort(arr, m + 1, r);
+        CALI_MARK_BEGIN(comp);
+        CALI_MARK_BEGIN(comp_large);
+        CALI_MARK_BEGIN(local_sort);
         merge(arr, l, m, r);
+        CALI_MARK_END(local_sort);
+        CALI_MARK_END(comp_large);
+        CALI_MARK_END(comp);
     }
-    CALI_MARK_END(local_sort);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
+    
 }
 
 int main(int argc, char **argv)
@@ -194,6 +203,7 @@ int main(int argc, char **argv)
     local_size = (rank < extra) ? (avg + 1) : avg;
     offset = (rank < extra) ? (rank * avg + rank) : (rank * avg + extra);
     float *local_nums = new float[local_size];
+    int local_sorted = 1;
 
     // fill array
     fill_array(local_nums, size, input_type);
@@ -212,41 +222,48 @@ int main(int argc, char **argv)
         std::vector<float> data(local_nums, local_nums + local_size);
         for (int i = 1; i < num_procs; i++)
         {
+            
             std::vector<float> received_data(local_size);
             CALI_MARK_BEGIN(comm);
             CALI_MARK_BEGIN(comm_large);
+            CALI_MARK_BEGIN(recieve);
             MPI_Recv(received_data.data(), local_size, MPI_FLOAT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            CALI_MARK_END(recieve);
             CALI_MARK_END(comm_large);
             CALI_MARK_END(comm);
             for (int j = 0; j < local_size; j++)
             {
                 data.push_back(received_data[j]);
             }
+            CALI_MARK_BEGIN(comp);
+            CALI_MARK_BEGIN(comp_large);
+            CALI_MARK_BEGIN(local_sort);
             merge(data.data(), 0, local_size * i - 1, local_size * (i + 1) - 1);
+            CALI_MARK_END(local_sort);
+            CALI_MARK_END(comp_large);
+            CALI_MARK_END(comp);
         }
-        for (float d : data)
-        {
-            cout << d << " ";
-        }
-        cout << endl;
+        
         delete[] nums;
         nums = data.data();
+        local_sorted = confirm_sorted(nums, size);
+        
     }
     else
     {
         mergeSort(local_nums, 0, local_size - 1);
         CALI_MARK_BEGIN(comm);
         CALI_MARK_BEGIN(comm_large);
+        CALI_MARK_BEGIN(send);
         MPI_Send(local_nums, local_size, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+        CALI_MARK_END(send);
         CALI_MARK_END(comm_large);
         CALI_MARK_END(comm);
     }
 
-    int sorted = 1;
-    int local_sorted = confirm_sorted(nums, size);
-
     if (rank == 0)
     {
+        int local_sorted = 1;
         if (local_sorted == 1)
         {
             cout << "Correctness Check Passed!" << endl;
@@ -257,12 +274,13 @@ int main(int argc, char **argv)
         }
     }
 
+
     adiak::init(NULL);
     adiak::launchdate();                               // launch date of the job
     adiak::libraries();                                // Libraries used
     adiak::cmdline();                                  // Command line used to launch the job
     adiak::clustername();                              // Name of the cluster
-    adiak::value("Algorithm", "Odd-Even Bubble Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
+    adiak::value("Algorithm", "Merge Sort"); // The name of the algorithm you are using (e.g., "MergeSort", "BitonicSort")
     adiak::value("ProgrammingModel", "MPI");           // e.g., "MPI", "CUDA", "MPIwithCUDA"
     adiak::value("Datatype", "float");                 // The datatype of input elements (e.g., double, int, float)
     adiak::value("SizeOfDatatype", sizeof(float));     // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
@@ -275,6 +293,6 @@ int main(int argc, char **argv)
     mgr.stop();
     mgr.flush();
     MPI_Finalize();
-    delete[] nums;
+    delete[] local_nums;
     return 0;
 }
