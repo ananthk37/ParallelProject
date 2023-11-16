@@ -457,6 +457,8 @@ The communication and computation time varies only a little bit. Since the amoun
 <br>
 
 #### Weak Scaling
+![Sequential MPI Weak Scaling](Graphs/Quick_mpi_weakcomp.png)
+![Sequential MPI Weak Scaling](Graphs/Quick_mpi_weakcomm.png)
 
 #### Input Types
 ![Quick CUDA Input Types](Graphs/Quick_cuda_comptime.png)
