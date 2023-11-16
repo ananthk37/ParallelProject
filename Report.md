@@ -416,13 +416,18 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 ### Merge Sort
 #### Strong Scaling
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/c48b2353-0dcc-4045-a6ca-57c3f429c567)
+The algorithm scale very well as we increase the number of processes but takes a dip at 2^7.
 
 #### Weak Scaling
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/f45f0979-5ad0-42e8-a6e5-0b68c40e94aa)
+We see a spike in communication costs as we have to go across nodes.
 
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/f4f74750-90b4-4455-8fa0-b788407e7811)
+Computation costs stay low until we hit a large number of elements per process.
 
 #### Input Types
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/29df3ee6-19d6-4d37-a2f3-197f8519a782)
+The input types seemed to not affect the merge sort algorithm too heavily beside the randomly generated data. This could be due to it having to do more merge calls as it has to keep looking between the unsorted subarrays.
 
 #### Communication vs Computation
 
