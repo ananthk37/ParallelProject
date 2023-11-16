@@ -423,6 +423,7 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/f4f74750-90b4-4455-8fa0-b788407e7811)
 
 #### Input Types
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/29df3ee6-19d6-4d37-a2f3-197f8519a782)
 
 #### Communication vs Computation
 
