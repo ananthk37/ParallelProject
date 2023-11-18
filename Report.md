@@ -460,13 +460,21 @@ The communication and computation time varies only a little bit. Since the amoun
 ![Quick CUDA Strong Scaling](Graphs/Quick_cuda_strong.png)
 ![Quick MPI Strong Scaling](Graphs/Quick_mpi_strong.png)
 <br>
+As seen in the graphs, the mpi speedup increases as the number of processors increase which shows that the strong scaling is very good. As for the cuda speedup it increases as the threads go up but for the highest threads it goes down which could be muliple reasons such as cache misses.
 
 #### Weak Scaling
-![Sequential MPI Weak Scaling](Graphs/Quick_mpi_weakcomp.png)
-![Sequential MPI Weak Scaling](Graphs/Quick_mpi_weakcomm.png)
+![Quick MPI Weak Scaling](Graphs/Quick_mpi_weakcomp.png)
+![Quick MPI Weak Scaling](Graphs/Quick_mpi_weakcom.png)
+![Quick CUDA Weak Scaling](Graphs/Quick_cuda_weakcomp.png)
+![Quick CUDA Weak Scaling](Graphs/Quick_cuda_weakcomm.png)
+<br>
+For both the mpi and cuda weak scaling for both comp and comm show very bad weak scaling as the lines aren't straight. Furthermore, the comm and comp lines increase as the number of proccessors increase.
 
 #### Input Types
 ![Quick CUDA Input Types](Graphs/Quick_cuda_comptime.png)
+![Quick MPI Input Types](Graphs/Quick_mpi_comptime.png)
+<br>
+For input type the mpi has a trend of all types decrease in time when the number of processes increase with random being the slowest of the bunch. For Cuda, the computation time for input time is kinda all over the place but looking at the y-axis it's very small difference and it shows the cuda doesn't affect the comp time by input type.
 
 #### Communication vs Computation
 ![Quick CUDA Percentage](Graphs/Quick_cuda_p.png)
