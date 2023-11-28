@@ -22,10 +22,11 @@ const char *data_init_h2d = "data_init_h2d";
 const char *data_init_d2h = "data_init_d2h";
 const char *comp = "comp";
 const char *comp_large = "comp_large";
+const char *comp_cpu = "comp_cpu";
 const char *comm = "comm";
 const char *comm_large = "comm_large";
-const char *comp_h2d = "comp_h2d";
-const char *comp_d2h = "comp_d2h";
+const char *comm_h2d = "comm_h2d";
+const char *comm_d2h = "comm_d2h";
 const char *correctness_check = "correctness_check";
 const char *correctness_h2d = "correctness_h2d";
 const char *correctness_d2h = "correctness_d2h";
@@ -330,29 +331,24 @@ int main(int argc, char *argv[])
     // Copy data from the host to the device
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(comp_h2d);
+    CALI_MARK_BEGIN(comm_h2d);
     cudaMemcpy(d_data, h_data, sizeof(float) * NUM_VALS, cudaMemcpyHostToDevice);
-    CALI_MARK_END(comp_h2d);
+    CALI_MARK_END(comm_h2d);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
+    int chunkSize = 2048;
     dim3 blocks(BLOCKS, 1);
     dim3 threads(THREADS, 1);
     // Launch the CUDA kernel to perform merge sort
     CALI_MARK_BEGIN(comp);
     CALI_MARK_BEGIN(comp_large);
 
-    
-    mergeSort<<<blocks, threads>>>(d_data, d_temp, NUM_VALS, NUM_VALS);
+    for (int i = 0; i < NUM_VALS / chunkSize; i++)
+    {
+        mergeSort<<<blocks, threads>>>(d_data, d_temp, NUM_VALS, chunkSize);
+    }
     cudaDeviceSynchronize();
-
-    /*
-    CALI_MARK_BEGIN(comp);
-    CALI_MARK_BEGIN(comp_large);
-    merge(data.data(), 0, local_size * i - 1, local_size * (i + 1) - 1);
-    CALI_MARK_END(comp_large);
-    CALI_MARK_END(comp);
-    */
 
     CALI_MARK_END(comp_large);
     CALI_MARK_END(comp);
@@ -360,15 +356,26 @@ int main(int argc, char *argv[])
     // Copy the sorted data back to the host
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(comp_d2h);
+    CALI_MARK_BEGIN(comm_d2h);
     cudaMemcpy(h_data, d_data, sizeof(float) * NUM_VALS, cudaMemcpyDeviceToHost);
-    CALI_MARK_END(comp_d2h);
+    CALI_MARK_END(comm_d2h);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
     // Clean up and free memory
     cudaFree(d_data);
     cudaFree(d_temp);
+
+    CALI_MARK_BEGIN(comp);
+    CALI_MARK_BEGIN(comp_large);
+    CALI_MARK_BEGIN(comp_cpu);
+    for (int i = 1; i < NUM_VALS / chunkSize; ++i)
+    {
+        mergeHost(h_data, 0, i * chunkSize - 1, std::min(((i + 1) * chunkSize - 1), NUM_VALS - 1));
+    }
+    CALI_MARK_END(comp);
+    CALI_MARK_END(comp_large);
+    CALI_MARK_END(comp_cpu);
 
     // check correctness
     if (confirm_sorted(h_data))
@@ -379,7 +386,12 @@ int main(int argc, char *argv[])
     {
         cout << "Correctness Check Failed..." << endl;
     }
-
+    /*
+    for (int i = 0; i < NUM_VALS; i++)
+    {
+        cout << h_data[i] << " ";
+    }
+    */
     adiak::init(NULL);
     adiak::launchdate();                           // launch date of the job
     adiak::libraries();                            // Libraries used
