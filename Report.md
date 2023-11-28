@@ -389,44 +389,37 @@ Note: "nearly" is substituted for "1%pertubed", this change is in name only.
 ![Bubble CUDA Strong Scaling Comp](Graphs/bubble_strong_cuda_comp.png)
 ![Bubble CUDA Strong Scaling Comm](Graphs/bubble_strong_cuda_comm.png)
 ![Bubble CUDA Strong Scaling Main](Graphs/bubble_strong_cuda_main.png)
-<br>
 The runtimes for input size of $2^{16}$ have no discernible pattern due to not fully seeing the effects of parallelization. For the larger input sizes, a clear pattern emerges in the computation, communication, and overall times. For comp_large, the total time decreases as the number of threads increases. As far as the different input types go, ordering from least time to greatest time they are as follows: sorted, nearly, random, and reverse. They are generally in this order at each thread count and input size. For communication times, the nearly and random input types are noticeably larger than the reverse and sorted times. One possible cause for this is that the rng calls in the data generation are somehow affecting the time it takes memcpy to run. The overall runtimes largely follow the same trends as the computation times, showing that it has a much larger influence over the total runtime than communication does.
 
 ![Bubble MPI Strong Scaling Comp](Graphs/bubble_strong_mpi_comp.png)
 ![Bubble MPI Strong Scaling Comm](Graphs/bubble_strong_mpi_comm.png)
 ![Bubble MPI Strong Scaling Main](Graphs/bubble_strong_mpi_main.png)
-<br>
 For computation times, the average time per process generally decreases as the number of processes increases. The exception to this is when the input size is $2^{16}$, the times begin to increase after the number of processes exceeds 16. Additionally, when the input type is random, the time is significantly higher than the other input types, especially on lower process counts. The communication times stay relatively consistent until the process count reaches 128, where the time skyrockets. The overall time mostly increases as the process count increases, except for the largest input size, where it decreases at first before increasing again. This is likely a result of the time saved during computation becoming a bigger factor as time increases again, but it still cannot counteract the large spikes in communication time.
 
 #### Speedup
 ![Bubble CUDA Speedup Comp](Graphs/bubble_speedup_cuda_comp.png)
 ![Bubble CUDA Speedup Comm](Graphs/bubble_speedup_cuda_comm.png)
 ![Bubble CUDA Speedup Main](Graphs/bubble_speedup_cuda_main.png)
-<br>
 The speedup for the computation and overall times increases quickly initially before leveling off or slightly dropping at the highest thread counts. For the nearly and sorted data, the speedup also increases as the input size increases, but strangely for the random and reverse sorted data, the middle input size ($2^{20}$) has the highest speedup. The communication speedup is almost non-existent for the nearly and randomly sorted data, barring a few outliers. For the reverse and sorted data, there is a slight increase in speedup for the middle input size and a more significant one for the largest input size.
 
 ![Bubble MPI Speedup Comp](Graphs/bubble_speedup_mpi_comp.png)
 ![Bubble MPI Speedup Comm](Graphs/bubble_speedup_mpi_comm.png)
 ![Bubble MPI Speedup Main](Graphs/bubble_speedup_mpi_main.png)
-<br>
-
+The speedup for the computation increases in a linear pattern before falling off around 16 processes for the small input size and at 64 processes for the other input sizes. The speedup for the communication actually decreases as the number of processes increases. The conflicting speedup trends between computation and communication lead to the overall speedup looking a bit messy. The largest input size sees an increase in speedup followed by a decrease, while the other input sizes mostly just decrease in speedup. This shows that communication has more of an effect on the overall runtime than computation.
 
 #### Weak Scaling
 ![Bubble CUDA Weak Scaling Comp](Graphs/bubble_weak_cuda_comp.png)
 ![Bubble CUDA Weak Scaling Comm](Graphs/bubble_weak_cuda_comm.png)
 ![Bubble CUDA Weak Scaling Comm](Graphs/bubble_weak_cuda_main.png)
-<br>
+
 
 ![Bubble MPI Weak Scaling Comp](Graphs/bubble_weak_mpi_comp.png)
 ![Bubble MPI Weak Scaling Comm](Graphs/bubble_weak_mpi_comm.png)
 ![Bubble MPI Weak Scaling Comm](Graphs/bubble_weak_mpi_main.png)
-<br>
 
 
 #### Communication vs Computation
-![Bubble CUDA Percentage](Graphs/bubble_per_cuda.png)
-![Bubble MPI Percentage](Graphs/bubble_per_mpi.png)
-<br>
+![Bubble Percentage](Graphs/bubble_per.png)
 Both of these graphs were generated using an input size of $2^{20}$. For the CUDA implementation, the communication and computation take up roughly the same percentage of the total time no matter the number of threads. For the MPI, implementation, the computation time takes up a lower percentage of the total time as the number of processes increases. The communication time slightly increases from 2 to 64 processes before spiking up to over 60% at 128 processes.
 
 ### Merge Sort
@@ -458,19 +451,16 @@ The Strong scaling here is very random, and varies up and down for speedup with 
 ![Sequential CUDA Weak Scaling](Graphs/selection_cuda_weak_comm.png)
 ![Sequential MPI Weak Scaling](Graphs/selection_mpi_weak_comm.png)
 ![Sequential MPI Weak Scaling](Graphs/selection_mpi_weak_comm.png)
-<br>
 The weak-scaling looks decent for MPI, and bad for CUDA, but bad for both with super large process sizes. This may be due to the exponential nature of the sort with selection sort, or the inefficient caching with CUDA GPUs.
 
 #### Communication vs Computation
 ![Selection CUDA Percentage](Graphs/selection_cuda_per.png)
-<br>
 The communication and computation time varies only a little bit. Since the amount of communication doesn't change much with more processors for GPU usage, it is unlikely to change the relationship between communication and computation much. This might be worth looking at for larger problem sizes however.
 
 ### Quick Sort
 #### Strong Scaling
 ![Quick CUDA Strong Scaling](Graphs/Quick_cuda_strong.png)
 ![Quick MPI Strong Scaling](Graphs/Quick_mpi_strong.png)
-<br>
 As seen in the graphs, the mpi speedup increases as the number of processors increase which shows that the strong scaling is very good. As for the cuda speedup it increases as the threads go up but for the highest threads it goes down which could be muliple reasons such as cache misses.
 
 #### Speedup
@@ -480,13 +470,11 @@ As seen in the graphs, the mpi speedup increases as the number of processors inc
 ![Quick MPI Weak Scaling](Graphs/Quick_mpi_weakcom.png)
 ![Quick CUDA Weak Scaling](Graphs/Quick_cuda_weakcomp.png)
 ![Quick CUDA Weak Scaling](Graphs/Quick_cuda_weakcomm.png)
-<br>
 For both the mpi and cuda weak scaling for both comp and comm show very bad weak scaling as the lines aren't straight. Furthermore, the comm and comp lines increase as the number of proccessors increase.
 
 #### Communication vs Computation
 ![Quick CUDA Percentage](Graphs/Quick_cuda_p.png)
 ![Quick MPI Percentage](Graphs/Quick_mpi_p.png)
-<br>
 As seen in the graphs the comp time decreases as the number of threads increase for both cuda and mpi but the mpi is alot more efficent 
 then my cuda and the reason why this could be is because of my implementation of cuda and mpi being different and my cuda not being that efficent compared to my mpi. Also for both mpi and cuda the comm time % increases at the threads going up becuase comm time doesn't decrease from parallelism so the percentage of comm time will increase if comp time decreases.
 
