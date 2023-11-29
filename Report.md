@@ -455,14 +455,14 @@ As we see in the main function graphs for MPI, we aren't really benefitting from
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/a20d8104-119f-407a-85b1-a1bfa3344b00)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/7fb5e986-1b7e-4822-a0f5-dc0bada346e2)
 
-For CUDA the speedup graph shows that we get NO performance benefit, in fact, it's a lot worse! This deterioration in performance is implementation-specific, with the aforementioned issues with multiple kernel calls and CPU merge steps. (A previous implementation I had could potentially experience speed up if it could handle input sizes larger than 2^16)
+For CUDA the speedup graph shows that we get NO performance benefit, in fact, it's a lot worse! This deterioration in performance is implementation-specific, with the aforementioned issues with multiple kernel calls and CPU merge steps. (A previous implementation I had could potentially experience speed up if it could handle input sizes larger than 2^16). It is very apparent in the comp_large graph for the input size of 2^16. 
 
 #### Speedup MPI
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/a44b75e9-0788-480b-8268-2e1cda3ceb11)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/663d9739-5216-443b-b3e3-ebd238023f06)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/9fe5a45f-3833-401b-8673-8d4248829a33)
 
-We can see a major improvement with MPI. As we mentioned before with the slowdown at 2^6/2^7 we lose some performance gain so the speed up goes down, but overall we trend upwards in terms of how fast our algorithm can complete the sort as we increase threads.
+We can see a major improvement with MPI. As we mentioned before with the slowdown at 2^6/2^7 we lose some performance gain so the speed up goes down, but overall we trend upwards in terms of how fast our algorithm can complete the sort as we increase threads. The speedup seems almost identical for comp across all input sizes and types. For communication we see a strange large spike in speedup going from 2 to 4 threads, it could be that the host can more quickly communicate out the smaller chunks due to fewer cache misses. It seems that we peak in an overall speedup of main is at 2^4 (16) threads.
 
 #### Weak Scaling CUDA
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/3dcea5d0-8416-473a-83ed-55a79287b8b1)
