@@ -503,20 +503,3 @@ As seen in the graphs the comp time decreases as the number of threads increase 
 then my cuda and the reason why this could be is because of my implementation of cuda and mpi being different and my cuda not being that efficent compared to my mpi. Also for both mpi and cuda the comm time % increases at the threads going up becuase comm time doesn't decrease from parallelism so the percentage of comm time will increase if comp time decreases.
 
 ### Algorithm Comparisons
-
-## 5. Presentation
-Plots for the presentation should be as follows:
-- For each implementation:
-    - For each of comp_large, comm, and main:
-        - Strong scaling plots for each InputSize with lines for InputType (3 plots - 4 lines each)
-        - Strong scaling speedup plot for each InputType (4 plots)
-        - Weak scaling plots for each InputType (4 plots)
-
-Analyze these plots and choose a subset to present and explain in your presentation.
-
-## 6. Final Report
-Submit a zip named `TeamX.zip` where `X` is your team number. The zip should contain the following files:
-- Algorithms: Directory of source code of your algorithms.
-- Data: All `.cali` files used to generate the plots separated by algorithm/implementation.
-- Jupyter notebook: The Jupyter notebook(s) used to generate the plots for the report.
-- Report.md
