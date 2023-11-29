@@ -434,16 +434,49 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 
 ### Merge Sort
 #### Strong Scaling CUDA
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/9ddf183a-bbbd-468c-91cb-686389067c7b)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/6a016b84-0f6a-47d2-908b-fadab4500e9a)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/33239ec9-bab0-43ee-82a9-0a5c1669f43b)
+Looking at the graphs from all three input sizes, we can see that there is no discernable improvement in computation from an increase in the number of threads on the GPU. We can also see specifically in the largest input size case that a reverse sorted list sorts faster than an already sorted list. Communication is also constant across all numbers of threads, which is expected since the communication from device to host is identical regardless of the number of threads. It can be seen in the graphs for main that the majority of the time spent in the algorithm is in computation. I think this plateauing behavior comes from the fact I have to create more kernel calls as the input size increases so that ends up becoming the bottleneck and not the actual computation inside the kernel itself. I also have a final merge step that occurs on the CPU so this could be another point of slowdown for the program.
+
 
 #### Strong Scaling MPI
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/dbcddd04-0077-4d0d-af8a-f4d519a5662a)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/c6d8abfa-edc8-4ca1-a141-487efc658fe2)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/5018cd4e-8980-40d8-92ce-0477bad33f31)
+Contrasting the CUDA implementation we can see that the MPI implementation of merge sort has major improvements in computation time with an increase of threads. As we reach the high thread counts, however, there are diminishing returns from this extended parallelism.
+
+For communication, there is this reoccurring spike in runtime at 32/64 threads. This is most likely due to us having to jump between nodes at this thread count range, causing a major increase in the cost of communication.
+
+As we see in the main function graphs for MPI, we aren't really benefitting from parallelism until we hit our largest input size, where we start to see a really defined behavior. We also see the major performance hit we take from this increase in communication cost and how it outweighs any benefit from the extended amount of parallelism we had from the computation steps.
 
 #### Speedup CUDA
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/a9fa2354-b244-43b6-b89a-63cf19923e58)
+For CUDA the speedup graph shows that we get NO performance benefit, in fact, it's a lot worse! This deterioration in performance is implementation-specific, with the aforementioned issues with multiple kernel calls and CPU merge steps. (A previous implementation I had could potentially experience speed up if it could handle input sizes larger than 2^16)
 
 #### Speedup MPI
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/17d5d722-64ce-4c96-8fe7-f10439a88814)
+We can see a major improvement with MPI. As we mentioned before with the slowdown at 2^6/2^7 we lose some performance gain so the speed up goes down, but overall we trend upwards in terms of how fast our algorithm can complete the sort as we increase threads.
 
-#### Weak Scaling
+#### Weak Scaling CUDA
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/3dcea5d0-8416-473a-83ed-55a79287b8b1)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/813a58a9-e862-4c92-a3ff-cb7a85de479d)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/24167e50-d718-4577-accd-7e8b821f82eb)
+We see in our weak scaling for CUDA in both the communication and computation that there is a shallow linearly increasing relationship in runtime as we increase the number of threads while keeping the number of elements per thread the same. This is expected as a correlated increase in the number of processors and elements in the context of parallel merge sorts bigO of nlog(n)/p. As n increases and p increases, the log(n) term would make the numerator scale slightly higher.
+
+#### Weak Scaling MPI
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/78e9c097-38aa-4ee4-aa26-01eac837006f)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/6d42a2ad-78c6-41c6-841f-4f6d650911b9)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/eec6eacd-cbd0-4834-a37a-fc4e9fd534d5)
+We see in our weak scaling for MPI that in computation, we have a flatter curve than we did in CUDA, this could be due to the merge sort implementation being higher performing in this implementation. We see the same spike in communication costs at 2^7 for the largest input size, again for the fact that we have to communicate large data across nodes.
 
 #### Communication vs Computation
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/35da0017-3120-4631-a76e-6b41e55445e9)
+
+We see in CUDA that a vast majority of the run time comes from the computation and the rest of the time comes from communication. Both quantities seem to hold mostly constant across all thread counts. This is expected as the amount of data regardless of thread count that is being sent between the device and host is the same (so there shouldn't be a time difference). The computation taking the same amount of time across all thread counts is a fault of the algorithm implementation.
+
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/62f37dac-6b5b-4e99-958d-e61c8ade931f)
+For CUDA we see that as we increase parallelism less and less of the total time is being spent on computation but for communication, it stays relatively the same. This makes sense since the computation goes faster. There is a step that isn't accounted for here since there is a loop that pushes back on a vector that runs n times which takes more and more time as we increase thread counts.
 
 ### Selection Sort
 #### Strong Scaling CUDA
@@ -509,42 +542,49 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 ![Quick CUDA Strong Scaling Comm](Graphs/quick_strong_cuda_comm.png)
 ![Quick CUDA Strong Scaling Main](Graphs/quick_strong_cuda_main.png)
 
+For Cuda strongly scaling the comp graphs at first glance are all over the place regardless of the input size. However, looking at the y-axis the numbers differ by like 0.1 showing that quicksort has a very bad strong scaling for comp. For comm, the lines are straight for all input types on each input size but reverse and random are slower than nearly and sorted input types. Then for main most of the trend lines are straight with slight disparity for each line but they are mostly straight.
+
+
 #### Strong Scaling MPI
 ![Quick MPI Strong Scaling Comp](Graphs/quick_strong_mpi_comp.png)
 ![Quick MPI Strong Scaling Comm](Graphs/quick_strong_mpi_comm.png)
 ![Quick MPI Strong Scaling Main](Graphs/quick_strong_mpi_main.png)
 
-As seen in the graphs, the mpi speedup increases as the number of processors increase which shows that the strong scaling is very good. As for the cuda speedup it increases as the threads go up but for the highest threads it goes down which could be muliple reasons such as cache misses.
+For MPI strong scaling the comp graphs had the same trends regardless of the input size. As the number of processors increases the average time/rank decreases showing good strong scaling for comp. For comm, the trend lines are pretty steady until reaching 128 threads which causes all the input sizes regardless of input type to shoot up indicating that comm slows down when there's too many processors. Then for main the strong scaling shows an upward trend in time as the processors increase but there's some outliers like reverse sort for 2^24 shoots up then for 128 processors it shoots back down. These trends indicate that the strong scaling is really effective for computation and not for the rest.
 
 #### Speedup CUDA
 ![Quick CUDA Speedup Comp](Graphs/quick_speedup_cuda_comp.png)
 ![Quick CUDA Speedup Comm](Graphs/quick_speedup_cuda_comm.png)
 ![Quick CUDA Speedup Main](Graphs/quick_speedup_cuda_main.png)
 
+For Cuda the speedup is all over the place for comm, comp and main at first glance. However, looking at the y-axis the disparity of the numbers are really small. That means for cuda there wasn't any speedup being done as the processors increase which could be down to the quick sort source code not be correctly parallized.
+
 #### Speedup MPI
 ![Quick MPI Speedup Comp](Graphs/quick_speedup_mpi_comp.png)
 ![Quick MPI Speedup Comm](Graphs/quick_speedup_mpi_comm.png)
 ![Quick MPI Speedup Main](Graphs/quick_speedup_mpi_main.png)
+
+The speedup for MPI has certain patterns for comm, comp and main regardless of the input type. For comp the speedup increases as the processors increase but the larger two input sizes tee-off at the highest processors count. For comm, the speedup decreases as the processors increase. For main, the 2^16 and 2^20 and somewhat consistent and the speedup decreases as the processors increase. However, for 2^24 in main the speedup increase then starts decreases as the number of processors increase which might be due the splitting of data into chunks and merging the chunks back together.
 
 #### Weak Scaling CUDA
 ![Quick CUDA Weak Scaling Comp](Graphs/quick_weak_cuda_comp.png)
 ![Quick CUDA Weak Scaling Comm](Graphs/quick_weak_cuda_comm.png)
 ![Quick CUDA Weak Scaling Main](Graphs/quick_weak_cuda_main.png)
 
-The cuda weak scaling is better than the mpi weak scaling as seen by the y-axis. The time goes up as the processors go up for each input type and for comp, comm, and main. However, the increase of the lines is very small, so if the graph was zoomed out the lines will be straight but it isn't the strongest weak scaling. 
+The cuda weak scaling is better than the mpi weak scaling as seen by the y-axis. The time goes up as the processors go up for each input type and for comp, comm, and main. However, the increase of the lines is very small, so if the graph was zoomed out the lines would be straight but zoomed in as the graphs shows that the data isn't the strongest weak scaling. 
 
 #### Weak Scaling MPI
 ![Quick MPI Weak Scaling Comp](Graphs/quick_weak_mpi_comp.png)
 ![Quick MPI Weak Scaling Comm](Graphs/quick_weak_mpi_comm.png)
 ![Quick MPI Weak Scaling Main](Graphs/quick_weak_mpi_main.png)
 
-The mpi weak scaling in not the strongest as the processors increase so does the time. However, the weak scaling is much better for comp_large compared to comm and main. For main and comm for sorted data there are some outliers causing the weak scaling to not be very strong.
+The mpi weak scaling is not the strongest as the processors increase when the time. However, the weak scaling is much better for comp_large compared to comm and main. For main and comm for sorted data there are some outliers causing the weak scaling to not be very strong.
 
 #### Communication vs Computation
 ![Quick Percentage](Graphs/quick_per.png)
 
-As seen in the graphs the comp time decreases as the number of threads increase for both cuda and mpi but the mpi is alot more efficent 
-then my cuda and the reason why this could be is because of my implementation of cuda and mpi being different and my cuda not being that efficent compared to my mpi. Also for both mpi and cuda the comm time % increases at the threads going up becuase comm time doesn't decrease from parallelism so the percentage of comm time will increase if comp time decreases.
+As seen in the graphs the comp time decreases as the number of threads increase for both cuda and mpi but the mpi is a lot more efficient
+then my cuda and the reason why this could be is because of my implementation of cuda and mpi being different and my cuda not being that efficient compared to my mpi. Also for both mpi and cuda the comm time % increases at the threads going up because comm time doesn't decrease from parallelism so the percentage of comm time will increase if comp time decreases.
 
 ### Algorithm Comparisons
 #### Strong Scaling CUDA
@@ -561,7 +601,15 @@ For computation times, quick sort consistently is the quickest algorithm by a su
 ![Algo CUDA Weak Scaling Comm](Graphs/algo_weak_cuda_comm.png)
 ![Algo CUDA Weak Scaling Main](Graphs/algo_weak_cuda_main.png)
 
+As we do weak scaling for our CUDA algorithms, we see that quick sort has the most "stable" with a very shallow increase in runtime across all input sizes per thread count. The other three algorithms trend in a similar fashion but merge sort seems to deviate a lot more compareatively at the 1024 inputs per thread size at thread counts larger than 2^8.
+
+Communication-wise all of our algorithms seem to trend towards scaling similarly as we increase input per thread size. At the lowest input per thread size (64) we see that bubble largely deviates but as we look at the y-axis, we can see that the variance is actually very small if not negligible. 
+
+The main graphs take the shape of the computation portion as that is what takes up most of the time for these algorithms in CUDA. So the observations made in the computation portion hold mostly true here. The only major observable deviation is with bubble sort at the 64 size because the communication bumps up the run time but since the overall time that it takes to run is so small it could look like this due to a stochastic change in the hardware environment.
+
 #### Weak Scaling MPI
 ![Algo MPI Weak Scaling Comp](Graphs/algo_weak_mpi_comp.png)
 ![Algo MPI Weak Scaling Comm](Graphs/algo_weak_mpi_comm.png)
 ![Algo MPI Weak Scaling Main](Graphs/algo_weak_mpi_main.png)
+
+For weak scaling MPI for the computation quick sort is fastest followed by bubble, merge, and then selection sort except for process size 512 where bubble sort gradually increases. Furthermore most of the trend lines are straight except for the bubble sort in process size 512 which is showing decent strong scaling. Then for comm, merge sort has the quickest run time and the other three sorts are bunched together, and their lines are increased as the process increases showing bad weak scaling. Then for main, all the sorts are interwoven except for selection sort for process size 131072, and all the trendlines are increasing as the processors increase showing bad weak scaling.
