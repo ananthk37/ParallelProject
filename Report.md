@@ -472,7 +472,9 @@ We see in our weak scaling for MPI that in computation, we have a flatter curve 
 
 #### Communication vs Computation
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/35da0017-3120-4631-a76e-6b41e55445e9)
+
 We see in CUDA that a vast majority of the run time comes from the computation and the rest of the time comes from communication. Both quantities seem to hold mostly constant across all thread counts. This is expected as the amount of data regardless of thread count that is being sent between the device and host is the same (so there shouldn't be a time difference). The computation taking the same amount of time across all thread counts is a fault of the algorithm implementation.
+
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/62f37dac-6b5b-4e99-958d-e61c8ade931f)
 For CUDA we see that as we increase parallelism less and less of the total time is being spent on computation but for communication, it stays relatively the same. This makes sense since the computation goes faster. There is a step that isn't accounted for here since there is a loop that pushes back on a vector that runs n times which takes more and more time as we increase thread counts.
 
