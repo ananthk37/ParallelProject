@@ -434,16 +434,39 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 
 ### Merge Sort
 #### Strong Scaling CUDA
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/9ddf183a-bbbd-468c-91cb-686389067c7b)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/6a016b84-0f6a-47d2-908b-fadab4500e9a)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/33239ec9-bab0-43ee-82a9-0a5c1669f43b)
+
+
 
 #### Strong Scaling MPI
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/dbcddd04-0077-4d0d-af8a-f4d519a5662a)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/c6d8abfa-edc8-4ca1-a141-487efc658fe2)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/5018cd4e-8980-40d8-92ce-0477bad33f31)
+
 
 #### Speedup CUDA
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/a9fa2354-b244-43b6-b89a-63cf19923e58)
 
 #### Speedup MPI
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/17d5d722-64ce-4c96-8fe7-f10439a88814)
 
-#### Weak Scaling
+#### Weak Scaling CUDA
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/3dcea5d0-8416-473a-83ed-55a79287b8b1)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/813a58a9-e862-4c92-a3ff-cb7a85de479d)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/24167e50-d718-4577-accd-7e8b821f82eb)
+
+
+#### Weak Scaling MPI
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/78e9c097-38aa-4ee4-aa26-01eac837006f)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/6d42a2ad-78c6-41c6-841f-4f6d650911b9)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/eec6eacd-cbd0-4834-a37a-fc4e9fd534d5)
+
 
 #### Communication vs Computation
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/35da0017-3120-4631-a76e-6b41e55445e9)
+![image](https://github.com/ananthk37/ParallelProject/assets/100246534/62f37dac-6b5b-4e99-958d-e61c8ade931f)
 
 ### Selection Sort
 #### Strong Scaling CUDA
