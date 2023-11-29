@@ -570,6 +570,12 @@ For computation times, quick sort consistently is the quickest algorithm by a su
 ![Algo CUDA Weak Scaling Comm](Graphs/algo_weak_cuda_comm.png)
 ![Algo CUDA Weak Scaling Main](Graphs/algo_weak_cuda_main.png)
 
+As we do weak scaling for our CUDA algorithms, we see that quick sort has the most "stable" with a very shallow increase in runtime across all input sizes per thread count. The other three algorithms trend in a similar fashion but merge sort seems to deviate a lot more compareatively at the 1024 inputs per thread size at thread counts larger than 2^8.
+
+Communication-wise all of our algorithms seem to trend towards scaling similarly as we increase input per thread size. At the lowest input per thread size (64) we see that bubble largely deviates but as we look at the y-axis, we can see that the variance is actually very small if not negligible. 
+
+The main graphs take the shape of the computation portion as that is what takes up most of the time for these algorithms in CUDA. So the observations made in the computation portion hold mostly true here. The only major observable deviation is with bubble sort at the 64 size because the communication bumps up the run time but since the overall time that it takes to run is so small it could look like this due to a stochastic change in the hardware environment.
+
 #### Weak Scaling MPI
 ![Algo MPI Weak Scaling Comp](Graphs/algo_weak_mpi_comp.png)
 ![Algo MPI Weak Scaling Comm](Graphs/algo_weak_mpi_comm.png)
