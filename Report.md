@@ -437,20 +437,26 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/9ddf183a-bbbd-468c-91cb-686389067c7b)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/6a016b84-0f6a-47d2-908b-fadab4500e9a)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/33239ec9-bab0-43ee-82a9-0a5c1669f43b)
-
+Looking at the graphs from all three input sizes, we can see that there is no discernable improvement in computation from an increase in the number of threads on the GPU. We can also see specifically in the largest input size case that a reverse sorted list sorts faster than an already sorted list. Communication is also constant across all numbers of threads, which is expected since the communication from device to host is identical regardless of the number of threads. It can be seen in the graphs for main that the majority of the time spent in the algorithm is in computation. I think this plateauing behavior comes from the fact I have to create more kernel calls as the input size increases so that ends up becoming the bottleneck and not the actual computation inside the kernel itself. I also have a final merge step that occurs on the CPU so this could be another point of slowdown for the program.
 
 
 #### Strong Scaling MPI
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/dbcddd04-0077-4d0d-af8a-f4d519a5662a)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/c6d8abfa-edc8-4ca1-a141-487efc658fe2)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/5018cd4e-8980-40d8-92ce-0477bad33f31)
+Contrasting the CUDA implementation we can see that the MPI implementation of merge sort has major improvements in computation time with an increase of threads. As we reach the high thread counts, however, there are diminishing returns from this extended parallelism.
 
+For communication, there is this reoccurring spike in runtime at 32/64 threads. This is most likely due to us having to jump between nodes at this thread count range, causing a major increase in the cost of communication.
+
+As we see in the main function graphs for MPI, we aren't really benefitting from parallelism until we hit our largest input size, where we start to see a really defined behavior. We also see the major performance hit we take from this increase in communication cost and how it outweighs any benefit from the extended amount of parallelism we had from the computation steps.
 
 #### Speedup CUDA
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/a9fa2354-b244-43b6-b89a-63cf19923e58)
+For CUDA the speedup graph shows that we get NO performance benefit, in fact, it's a lot worse! This deterioration in performance is implementation-specific, with the aforementioned issues with multiple kernel calls and CPU merge steps. (A previous implementation I had could potentially experience speed up if it could handle input sizes larger than 2^16)
 
 #### Speedup MPI
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/17d5d722-64ce-4c96-8fe7-f10439a88814)
+We can see a major improvement with MPI. As we mentioned before with the slowdown at 2^6/2^7 we lose some performance gain so the speed up goes down, but overall we trend upwards in terms of how fast our algorithm can complete the sort as we increase threads.
 
 #### Weak Scaling CUDA
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/3dcea5d0-8416-473a-83ed-55a79287b8b1)
