@@ -484,18 +484,21 @@ For CUDA we see that as we increase parallelism less and less of the total time 
 ![Selection CUDA Strong Scaling Comm](Graphs/selection_strong_cuda_comm.png)
 ![Selection CUDA Strong Scaling Main](Graphs/selection_strong_cuda_main.png)
 
+For CUDA, the communication time stays consistent with the number of processes. This is because the only communication that happens is transferring the data to and from the device, which is constant with each implementation. The total computation time remains roughly the same since the number of comparisons necessary does not change. 
 
 #### Strong Scaling MPI
 ![Selection MPI Strong Scaling Comp](Graphs/selection_strong_mpi_comp.png)
 ![Selection MPI Strong Scaling Comm](Graphs/selection_strong_mpi_comm.png)
 ![Selection MPI Strong Scaling Main](Graphs/selection_strong_mpi_main.png)
 
+The computation time decreases with an increase in processors. This is because the size of the individual selection sorts on the partion of data in each process is smaller, allowing the individual sorts to complete faster. Communication time does increase as a factor, since more threads are communicating to merge sorted subarrays. In general, the decrase in computation time improves the performance with more processors, since the individual sorts are the slowest step.
 
 #### Speedup CUDA
 ![Selection CUDA Speedup Comp](Graphs/selection_speedup_cuda_comp.png)
 ![Selection CUDA Speedup Comm](Graphs/selection_speedup_cuda_comm.png)
 ![Selection CUDA Speedup Main](Graphs/selection_speedup_cuda_main.png)
 
+The CUDA implementations generally don't speedup as the number of threads increases. This is because the algorithm was written to sort fixed-size blocks at a time using selection sort, so increasing the number of Threads would not improve performance. The performance using arrays of size $2^{20}$ may be due to the time required to startup more unused GPU threads or synchronize with unused threads.
 
 
 #### Speedup MPI
@@ -503,38 +506,26 @@ For CUDA we see that as we increase parallelism less and less of the total time 
 ![Selection MPI Speedup Comm](Graphs/selection_speedup_mpi_comm.png)
 ![Selection MPI Speedup Main](Graphs/selection_speedup_mpi_main.png)
 
-
+The MPI graphs generally show speedup as the number of processes increase. The speedup is most notable in computation time, which is due to the smaller subarrays being sorted with selection sort. The decrease in speedup for communication is due to the increase in communication with more processes. The overall time generally follows the speedup of computation, but varies a bit since the smaller problem sizes may lead to the speedup of more processes mattering less in the overall runtime.
 
 #### Weak Scaling CUDA
 ![Selection CUDA Weak Scaling Comp](Graphs/selection_weak_cuda_comp.png)
 ![Selection CUDA Weak Scaling Comm](Graphs/selection_weak_cuda_comm.png)
 ![Selection CUDA Weak Scaling Comm](Graphs/selection_weak_cuda_main.png)
 
+There is a linear increase in the time per rank for the CUDA implementation. This is because the increase in the problem size require more merging at the end which is relatively slow in comparison to the individual GPU sorting steps, leading to a linear increase in time. This is reflected in both the communication and computation times increasing, as the later stages take more time.
 
 #### Weak Scaling MPI
 ![Selection MPI Weak Scaling Comp](Graphs/selection_weak_mpi_comp.png)
 ![Selection MPI Weak Scaling Comm](Graphs/selection_weak_mpi_comm.png)
 ![Selection MPI Weak Scaling Comm](Graphs/selection_weak_mpi_main.png)
 
+The MPI implementation does weak scaling well. This is because the most time consuming part is the sorting of the individual arrays for the MPI implementation, which remains constant since the number of values sorted at this step remains constant. The merge step after that is much quicker, so it barely affects the overall runtime as the problem size increases. This can be seen as the communication time generally increases for the merge step, but the computation and total time remain generally constant.
+
 
 #### Communication vs Computation
 ![Selection Percentage](Graphs/selection_per.png)
-
-#### Strong Scaling CUDA
-
-
-#### Strong Scaling MPI
-
-#### Speedup CUDA
-
-#### Speedup MPI
-
-#### Weak Scaling CUDA
-
-#### Weak Scaling MPI
-
-#### Communication vs Computation
-
+The CUDA implementation is mostly computation, as the only communication that happens is moving values from device to host and host to device, which are relatively quick and increase linearly. The computation in sorting increases more than linearly, so the share of communication does not increase. For MPI, the implementation requires more communication with more threads. Since each are broadcasting their own sorted subarrays after completion, mroe communcation is happening. with more threads. The computation also becomes significantly smaller since the subarray each process sorts is smaller, leading to a decrease in the percentage of time spent doing computation.
 
 ### Quick Sort
 #### Strong Scaling CUDA
