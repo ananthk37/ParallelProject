@@ -462,17 +462,19 @@ We can see a major improvement with MPI. As we mentioned before with the slowdow
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/3dcea5d0-8416-473a-83ed-55a79287b8b1)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/813a58a9-e862-4c92-a3ff-cb7a85de479d)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/24167e50-d718-4577-accd-7e8b821f82eb)
-
+We see in our weak scaling for CUDA in both the communication and computation that there is a shallow linearly increasing relationship in runtime as we increase the number of threads while keeping the number of elements per thread the same. This is expected as a correlated increase in the number of processors and elements in the context of parallel merge sorts bigO of nlog(n)/p. As n increases and p increases, the log(n) term would make the numerator scale slightly higher.
 
 #### Weak Scaling MPI
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/78e9c097-38aa-4ee4-aa26-01eac837006f)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/6d42a2ad-78c6-41c6-841f-4f6d650911b9)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/eec6eacd-cbd0-4834-a37a-fc4e9fd534d5)
-
+We see in our weak scaling for MPI that in computation, we have a flatter curve than we did in CUDA, this could be due to the merge sort implementation being higher performing in this implementation. We see the same spike in communication costs at 2^7 for the largest input size, again for the fact that we have to communicate large data across nodes.
 
 #### Communication vs Computation
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/35da0017-3120-4631-a76e-6b41e55445e9)
+We see in CUDA that a vast majority of the run time comes from the computation and the rest of the time comes from communication. Both quantities seem to hold mostly constant across all thread counts. This is expected as the amount of data regardless of thread count that is being sent between the device and host is the same (so there shouldn't be a time difference). The computation taking the same amount of time across all thread counts is a fault of the algorithm implementation.
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/62f37dac-6b5b-4e99-958d-e61c8ade931f)
+For CUDA we see that as we increase parallelism less and less of the total time is being spent on computation but for communication, it stays relatively the same. This makes sense since the computation goes faster. There is a step that isn't accounted for here since there is a loop that pushes back on a vector that runs n times which takes more and more time as we increase thread counts.
 
 ### Selection Sort
 #### Strong Scaling CUDA
