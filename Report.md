@@ -541,3 +541,5 @@ For computation times, quick sort consistently is the quickest algorithm by a su
 ![Algo MPI Weak Scaling Comp](Graphs/algo_weak_mpi_comp.png)
 ![Algo MPI Weak Scaling Comm](Graphs/algo_weak_mpi_comm.png)
 ![Algo MPI Weak Scaling Main](Graphs/algo_weak_mpi_main.png)
+
+For weak scaling MPI for the computation quick sort is fastest followed by bubble, merge, and then selection sort except for process size 512 where bubble sort gradually increases. Furthermore most of the trend lines are straight except for the bubble sort in process size 512 which is showing decent strong scaling. Then for comm, merge sort has the quickest run time and the other three sorts are bunched together, and their lines are increased as the process increases showing bad weak scaling. Then for main, all the sorts are interwoven except for selection sort for process size 131072, and all the trendlines are increasing as the processors increase showing bad weak scaling.
