@@ -503,3 +503,18 @@ As seen in the graphs the comp time decreases as the number of threads increase 
 then my cuda and the reason why this could be is because of my implementation of cuda and mpi being different and my cuda not being that efficent compared to my mpi. Also for both mpi and cuda the comm time % increases at the threads going up becuase comm time doesn't decrease from parallelism so the percentage of comm time will increase if comp time decreases.
 
 ### Algorithm Comparisons
+#### Strong Scaling CUDA
+![Algo CUDA Strong Scaling Comp](Graphs/algo_strong_cuda_comp.png)
+![Algo CUDA Strong Scaling Comm](Graphs/algo_strong_cuda_comm.png)
+![Algo CUDA Strong Scaling Main](Graphs/algo_strong_cuda_main.png)
+
+For computation times, quick sort consistently is the quickest algorithm by a substantial amount. For the smallest input size, bubble and merge sort have similar performance, with merge being slightly faster, and selection sort has the worst performance. For the medium input size, merge sort becomes slightly worse than bubble sort. For the largest input size, bubble sort becomes the slowest algorithm followed by merge, selection, then quick. Communication times are the slowest for bubble sort and the fastest for quick sort. Selection sort and merge sort have similar performance. These trends are true for every input size. The overall runtime is almost identical to the computation times since they make up the majority of the total time.
+
+#### Strong Scaling MPI
+
+#### Weak Scaling CUDA
+![Algo CUDA Weak Scaling Comp](Graphs/algo_weak_cuda_comp.png)
+![Algo CUDA Weak Scaling Comm](Graphs/algo_weak_cuda_comm.png)
+![Algo CUDA Weak Scaling Main](Graphs/algo_weak_cuda_main.png)
+
+#### Weak Scaling MPI
