@@ -447,9 +447,48 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 
 ### Selection Sort
 #### Strong Scaling CUDA
-![Selection CUDA Strong Scaling](Graphs/selection_cuda_strong.png)
+![Selection CUDA Strong Scaling Comp](Graphs/selection_strong_cuda_comp.png)
+![Selection CUDA Strong Scaling Comm](Graphs/selection_strong_cuda_comm.png)
+![Selection CUDA Strong Scaling Main](Graphs/selection_strong_cuda_main.png)
 
-The Strong scaling here is very random, and varies up and down for speedup with different numbers of CUDA threads. This may be due to the inefficiency of using CUDA GPU for selection sort, since the whole array is traversed. This will be tried with a larger array size as well to test if speedup is more evident.
+
+#### Strong Scaling MPI
+![Selection MPI Strong Scaling Comp](Graphs/selection_strong_mpi_comp.png)
+![Selection MPI Strong Scaling Comm](Graphs/selection_strong_mpi_comm.png)
+![Selection MPI Strong Scaling Main](Graphs/selection_strong_mpi_main.png)
+
+
+#### Speedup CUDA
+![Selection CUDA Speedup Comp](Graphs/selection_speedup_cuda_comp.png)
+![Selection CUDA Speedup Comm](Graphs/selection_speedup_cuda_comm.png)
+![Selection CUDA Speedup Main](Graphs/selection_speedup_cuda_main.png)
+
+
+
+#### Speedup MPI
+![Selection MPI Speedup Comp](Graphs/selection_speedup_mpi_comp.png)
+![Selection MPI Speedup Comm](Graphs/selection_speedup_mpi_comm.png)
+![Selection MPI Speedup Main](Graphs/selection_speedup_mpi_main.png)
+
+
+
+#### Weak Scaling CUDA
+![Selection CUDA Weak Scaling Comp](Graphs/selection_weak_cuda_comp.png)
+![Selection CUDA Weak Scaling Comm](Graphs/selection_weak_cuda_comm.png)
+![Selection CUDA Weak Scaling Comm](Graphs/selection_weak_cuda_main.png)
+
+
+#### Weak Scaling MPI
+![Selection MPI Weak Scaling Comp](Graphs/selection_weak_mpi_comp.png)
+![Selection MPI Weak Scaling Comm](Graphs/selection_weak_mpi_comm.png)
+![Selection MPI Weak Scaling Comm](Graphs/selection_weak_mpi_main.png)
+
+
+#### Communication vs Computation
+![Selection Percentage](Graphs/selection_per.png)
+
+#### Strong Scaling CUDA
+
 
 #### Strong Scaling MPI
 
@@ -458,19 +497,11 @@ The Strong scaling here is very random, and varies up and down for speedup with 
 #### Speedup MPI
 
 #### Weak Scaling CUDA
-![Sequential CUDA Weak Scaling](Graphs/selection_cuda_weak_comm.png)
-![Sequential CUDA Weak Scaling](Graphs/selection_cuda_weak_comm.png)
 
 #### Weak Scaling MPI
-![Sequential MPI Weak Scaling](Graphs/selection_mpi_weak_comm.png)
-![Sequential MPI Weak Scaling](Graphs/selection_mpi_weak_comm.png)
-
-The weak-scaling looks decent for MPI, and bad for CUDA, but bad for both with super large process sizes. This may be due to the exponential nature of the sort with selection sort, or the inefficient caching with CUDA GPUs.
 
 #### Communication vs Computation
-![Selection CUDA Percentage](Graphs/selection_cuda_per.png)
 
-The communication and computation time varies only a little bit. Since the amount of communication doesn't change much with more processors for GPU usage, it is unlikely to change the relationship between communication and computation much. This might be worth looking at for larger problem sizes however.
 
 ### Quick Sort
 #### Strong Scaling CUDA
