@@ -418,12 +418,14 @@ The speedup for the computation increases in a linear pattern before falling off
 ![Bubble CUDA Weak Scaling Comm](Graphs/bubble_weak_cuda_comm.png)
 ![Bubble CUDA Weak Scaling Comm](Graphs/bubble_weak_cuda_main.png)
 
+For computation, communication, and overall, the times increase linearly as the number of threads increases. The one exception to this is when the size per thread is 64, which sees a decrease in communication time as the number of threads increases. This algorithm is a poor example of weak scaling since the lines are not flat.
 
 #### Weak Scaling MPI
 ![Bubble MPI Weak Scaling Comp](Graphs/bubble_weak_mpi_comp.png)
 ![Bubble MPI Weak Scaling Comm](Graphs/bubble_weak_mpi_comm.png)
 ![Bubble MPI Weak Scaling Comm](Graphs/bubble_weak_mpi_main.png)
 
+For computation times, the times increase as the number of processes increases. The communication times see a large spike between 2 and 4 processes and another between 64 and 128 processes. The values in between stay consistent or slightly increase. The overall times generally increase as the number of processes increases but see some larger spikes at the lowest and highest process count, very similar to the communication times. This is due to the communication having a large influence on the overall runtime.
 
 #### Communication vs Computation
 ![Bubble Percentage](Graphs/bubble_per.png)
