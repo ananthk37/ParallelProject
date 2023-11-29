@@ -531,3 +531,6 @@ For computation times, quick sort consistently is the quickest algorithm by a su
 ![Algo CUDA Weak Scaling Main](Graphs/algo_weak_cuda_main.png)
 
 #### Weak Scaling MPI
+![Algo MPI Weak Scaling Comp](Graphs/algo_weak_mpi_comp.png)
+![Algo MPI Weak Scaling Comm](Graphs/algo_weak_mpi_comm.png)
+![Algo MPI Weak Scaling Main](Graphs/algo_weak_mpi_main.png)
