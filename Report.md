@@ -474,30 +474,43 @@ The communication and computation time varies only a little bit. Since the amoun
 
 ### Quick Sort
 #### Strong Scaling CUDA
-![Quick CUDA Strong Scaling](Graphs/Quick_cuda_strong.png)
+![Quick CUDA Strong Scaling Comp](Graphs/quick_strong_cuda_comp.png)
+![Quick CUDA Strong Scaling Comm](Graphs/quick_strong_cuda_comm.png)
+![Quick CUDA Strong Scaling Main](Graphs/quick_strong_cuda_main.png)
 
 #### Strong Scaling MPI
-![Quick MPI Strong Scaling](Graphs/Quick_mpi_strong.png)
+![Quick MPI Strong Scaling Comp](Graphs/quick_strong_mpi_comp.png)
+![Quick MPI Strong Scaling Comm](Graphs/quick_strong_mpi_comm.png)
+![Quick MPI Strong Scaling Main](Graphs/quick_strong_mpi_main.png)
 
 As seen in the graphs, the mpi speedup increases as the number of processors increase which shows that the strong scaling is very good. As for the cuda speedup it increases as the threads go up but for the highest threads it goes down which could be muliple reasons such as cache misses.
 
 #### Speedup CUDA
+![Quick CUDA Speedup Comp](Graphs/quick_speedup_cuda_comp.png)
+![Quick CUDA Speedup Comm](Graphs/quick_speedup_cuda_comm.png)
+![Quick CUDA Speedup Main](Graphs/quick_speedup_cuda_main.png)
 
 #### Speedup MPI
+![Quick MPI Speedup Comp](Graphs/quick_speedup_mpi_comp.png)
+![Quick MPI Speedup Comm](Graphs/quick_speedup_mpi_comm.png)
+![Quick MPI Speedup Main](Graphs/quick_speedup_mpi_main.png)
 
 #### Weak Scaling CUDA
-![Quick MPI Weak Scaling](Graphs/Quick_mpi_weakcomp.png)
-![Quick MPI Weak Scaling](Graphs/Quick_mpi_weakcom.png)
+![Quick CUDA Weak Scaling Comp](Graphs/quick_weak_cuda_comp.png)
+![Quick CUDA Weak Scaling Comm](Graphs/quick_weak_cuda_comm.png)
+![Quick CUDA Weak Scaling Main](Graphs/quick_weak_cuda_main.png)
+
+The cuda weak scaling is better than the mpi weak scaling as seen by the y-axis. The time goes up as the processors go up for each input type and for comp, comm, and main. However, the increase of the lines is very small, so if the graph was zoomed out the lines will be straight but it isn't the strongest weak scaling. 
 
 #### Weak Scaling MPI
-![Quick CUDA Weak Scaling](Graphs/Quick_cuda_weakcomp.png)
-![Quick CUDA Weak Scaling](Graphs/Quick_cuda_weakcomm.png)
+![Quick MPI Weak Scaling Comp](Graphs/quick_weak_mpi_comp.png)
+![Quick MPI Weak Scaling Comm](Graphs/quick_weak_mpi_comm.png)
+![Quick MPI Weak Scaling Main](Graphs/quick_weak_mpi_main.png)
 
-For both the mpi and cuda weak scaling for both comp and comm show very bad weak scaling as the lines aren't straight. Furthermore, the comm and comp lines increase as the number of proccessors increase.
+The mpi weak scaling in not the strongest as the processors increase so does the time. However, the weak scaling is much better for comp_large compared to comm and main. For main and comm for sorted data there are some outliers causing the weak scaling to not be very strong.
 
 #### Communication vs Computation
-![Quick CUDA Percentage](Graphs/Quick_cuda_p.png)
-![Quick MPI Percentage](Graphs/Quick_mpi_p.png)
+![Quick Percentage](Graphs/quick_per.png)
 
 As seen in the graphs the comp time decreases as the number of threads increase for both cuda and mpi but the mpi is alot more efficent 
 then my cuda and the reason why this could be is because of my implementation of cuda and mpi being different and my cuda not being that efficent compared to my mpi. Also for both mpi and cuda the comm time % increases at the threads going up becuase comm time doesn't decrease from parallelism so the percentage of comm time will increase if comp time decreases.
