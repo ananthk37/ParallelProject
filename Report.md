@@ -592,6 +592,11 @@ then my cuda and the reason why this could be is because of my implementation of
 For computation times, quick sort consistently is the quickest algorithm by a substantial amount. For the smallest input size, bubble and merge sort have similar performance, with merge being slightly faster, and selection sort has the worst performance. For the medium input size, merge sort becomes slightly worse than bubble sort. For the largest input size, bubble sort becomes the slowest algorithm followed by merge, selection, then quick. Communication times are the slowest for bubble sort and the fastest for quick sort. Selection sort and merge sort have similar performance. These trends are true for every input size. The overall runtime is almost identical to the computation times since they make up the majority of the total time.
 
 #### Strong Scaling MPI
+![Algo MPI Strong Scaling Comp](Graphs/algo_strong_mpi_comp.png)
+![Algo MPI Strong Scaling Comm](Graphs/algo_strong_mpi_comm.png)
+![Algo MPI Strong Scaling Main](Graphs/algo_strong_mpi_main.png)
+
+For computation times, quick sort is the quickest algorithm, followed by bubble sort, merge sort, and then selection sort. Merge sort has the quickest communication time with the other 3 algorithms having similar times. Overall times vary based on the input size with the smaller input size having all 4 algorithms pretty close in time but merge generally being the fastest. For the larger input size, bubble and quick sort are the fastest for the lower process counts with merge being the fastest for higher process counts, and selection sort generally being the slowest.
 
 #### Weak Scaling CUDA
 ![Algo CUDA Weak Scaling Comp](Graphs/algo_weak_cuda_comp.png)
