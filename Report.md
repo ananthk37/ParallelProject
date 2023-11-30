@@ -437,13 +437,14 @@ Both of these graphs were generated using an input size of $2^{20}$. For the CUD
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/9ddf183a-bbbd-468c-91cb-686389067c7b)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/6a016b84-0f6a-47d2-908b-fadab4500e9a)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/33239ec9-bab0-43ee-82a9-0a5c1669f43b)
-Looking at the graphs from all three input sizes, we can see that there is no discernable improvement in computation from an increase in the number of threads on the GPU. We can also see specifically in the largest input size case that a reverse sorted list sorts faster than an already sorted list. Communication is also constant across all numbers of threads, which is expected since the communication from device to host is identical regardless of the number of threads. It can be seen in the graphs for main that the majority of the time spent in the algorithm is in computation. I think this plateauing behavior comes from the fact I have to create more kernel calls as the input size increases so that ends up becoming the bottleneck and not the actual computation inside the kernel itself. I also have a final merge step that occurs on the CPU so this could be another point of slowdown for the program.
 
+Looking at the graphs from all three input sizes, we can see that there is no discernable improvement in computation from an increase in the number of threads on the GPU. We can also see specifically in the largest input size case that a reverse sorted list sorts faster than an already sorted list. Communication is also constant across all numbers of threads, which is expected since the communication from device to host is identical regardless of the number of threads. It can be seen in the graphs for main that the majority of the time spent in the algorithm is in computation. I think this plateauing behavior comes from the fact I have to create more kernel calls as the input size increases so that ends up becoming the bottleneck and not the actual computation inside the kernel itself. I also have a final merge step that occurs on the CPU so this could be another point of slowdown for the program.
 
 #### Strong Scaling MPI
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/dbcddd04-0077-4d0d-af8a-f4d519a5662a)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/c6d8abfa-edc8-4ca1-a141-487efc658fe2)
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/5018cd4e-8980-40d8-92ce-0477bad33f31)
+
 Contrasting the CUDA implementation we can see that the MPI implementation of merge sort has major improvements in computation time with an increase of threads. As we reach the high thread counts, however, there are diminishing returns from this extended parallelism.
 
 For communication, there is this reoccurring spike in runtime at 32/64 threads. This is most likely due to us having to jump between nodes at this thread count range, causing a major increase in the cost of communication.
@@ -482,6 +483,7 @@ We see in our weak scaling for MPI that in computation, we have a flatter curve 
 We see in CUDA that a vast majority of the run time comes from the computation and the rest of the time comes from communication. Both quantities seem to hold mostly constant across all thread counts. This is expected as the amount of data regardless of thread count that is being sent between the device and host is the same (so there shouldn't be a time difference). The computation taking the same amount of time across all thread counts is a fault of the algorithm implementation.
 
 ![image](https://github.com/ananthk37/ParallelProject/assets/100246534/62f37dac-6b5b-4e99-958d-e61c8ade931f)
+
 For CUDA we see that as we increase parallelism less and less of the total time is being spent on computation but for communication, it stays relatively the same. This makes sense since the computation goes faster. There is a step that isn't accounted for here since there is a loop that pushes back on a vector that runs n times which takes more and more time as we increase thread counts.
 
 ### Selection Sort
