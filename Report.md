@@ -490,7 +490,7 @@ For CUDA we see that as we increase parallelism less and less of the total time 
 ![Selection CUDA Strong Scaling Comm](Graphs/selection_strong_cuda_comm.png)
 ![Selection CUDA Strong Scaling Main](Graphs/selection_strong_cuda_main.png)
 
-For CUDA, the communication time stays consistent with the number of processes. This is because the only communication that happens is transferring the data to and from the device, which is constant with each implementation. The total computation time remains roughly the same since the number of comparisons necessary does not change. 
+For CUDA, the communication time stays consistent with the number of processes. This is because the only communication that happens is transferring the data to and from the device, which is constant with each implementation. The total computation time remains roughly the same since the number of comparisons necessary does not change. The implementation of the algorithm only parallelizes the input to a degree where it can be handled by one block in the GPU, so increasing the number of threads does not scale well for CUDA.
 
 #### Strong Scaling MPI
 ![Selection MPI Strong Scaling Comp](Graphs/selection_strong_mpi_comp.png)
