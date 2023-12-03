@@ -18,17 +18,12 @@ int BLOCKS;
 int NUM_VALS;
 
 const char* data_init = "data_init";
-const char* data_init_h2d = "data_init_h2d";
-const char* data_init_d2h = "data_init_d2h";
 const char* comp = "comp";
 const char* comp_large = "comp_large";
 const char* comm = "comm";
 const char* comm_large = "comm_large";
-const char* comp_h2d = "comp_h2d";
-const char* comp_d2h = "comp_d2h";
+const char* mem_copy = "cudaMemcpy";
 const char* correctness_check = "correctness_check";
-const char* correctness_h2d = "correctness_h2d";
-const char* correctness_d2h = "correctness_d2h";
 
 
 __global__ void random_fill(float* nums, int size) {
@@ -108,9 +103,9 @@ void fill_array(float* nums, const char* input_type) {
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(data_init_h2d);
+    CALI_MARK_BEGIN(mem_copy);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
-    CALI_MARK_END(data_init_h2d);
+    CALI_MARK_END(mem_copy);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
@@ -137,9 +132,9 @@ void fill_array(float* nums, const char* input_type) {
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(data_init_d2h);
+    CALI_MARK_BEGIN(mem_copy);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
-    CALI_MARK_END(data_init_d2h);
+    CALI_MARK_END(mem_copy);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
@@ -155,9 +150,9 @@ void bubble_sort(float* nums) {
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(comp_h2d);
+    CALI_MARK_BEGIN(mem_copy);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
-    CALI_MARK_END(comp_h2d);
+    CALI_MARK_END(mem_copy);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
@@ -176,9 +171,9 @@ void bubble_sort(float* nums) {
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(comp_d2h);
+    CALI_MARK_BEGIN(mem_copy);
     cudaMemcpy(nums, dev_nums, size, cudaMemcpyDeviceToHost);
-    CALI_MARK_END(comp_d2h);
+    CALI_MARK_END(mem_copy);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
@@ -197,10 +192,10 @@ bool confirm_sorted(float* nums) {
     //MEM COPY FROM HOST TO DEVICE
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(correctness_h2d);
+    CALI_MARK_BEGIN(mem_copy);
     cudaMemcpy(dev_nums, nums, size, cudaMemcpyHostToDevice);
     cudaMemcpy(dev_sorted, &sorted, sizeof(bool), cudaMemcpyHostToDevice);
-    CALI_MARK_END(correctness_h2d);
+    CALI_MARK_END(mem_copy);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
@@ -216,9 +211,9 @@ bool confirm_sorted(float* nums) {
     //MEM COPY FROM DEVICE TO HOST
     CALI_MARK_BEGIN(comm);
     CALI_MARK_BEGIN(comm_large);
-    CALI_MARK_BEGIN(correctness_d2h);
+    CALI_MARK_BEGIN(mem_copy);
     cudaMemcpy(&sorted, dev_sorted, sizeof(bool), cudaMemcpyDeviceToHost);
-    CALI_MARK_END(correctness_d2h);
+    CALI_MARK_END(mem_copy);
     CALI_MARK_END(comm_large);
     CALI_MARK_END(comm);
 
